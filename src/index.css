@@ -38,11 +38,15 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
     
-    /* Custom Material Design colors */
+    /* Custom Material Design tokens */
     --material-background: 0 0% 98%;
     --material-surface: 0 0% 100%;
     --material-border: 0 0% 88%;
+    --material-muted-icon: 0 0% 46%;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
     --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+    --space-md: 16px;
+    --radius-md: 8px;
 
     --sidebar-background: 0 0% 98%;
 

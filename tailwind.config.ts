@@ -68,12 +68,17 @@ export default {
 				}
 			},
 			boxShadow: {
+				'sm': '0 1px 2px rgba(0,0,0,0.05)',
 				'md': '0 2px 8px rgba(0,0,0,0.1)',
+			},
+			spacing: {
+				'md': '16px',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				sm: 'calc(var(--radius) - 4px)',
+				'material-md': '8px',
 			},
 			keyframes: {
 				'accordion-down': {

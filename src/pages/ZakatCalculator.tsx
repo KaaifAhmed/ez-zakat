@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import ZakatEntryCard from "@/components/ZakatEntryCard";
 
 const ZakatCalculator = () => {
   return (
@@ -12,7 +13,10 @@ const ZakatCalculator = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 p-6">
-        {/* Content will be added here */}
+        {/* Demo ZakatEntryCard */}
+        <div className="max-w-md">
+          <ZakatEntryCard />
+        </div>
       </main>
 
       {/* Floating Action Button */}
