@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import ZakatEntryCard from "@/components/ZakatEntryCard";
+import CalculationSummaryPanel from "@/components/CalculationSummaryPanel";
 
 interface ZakatEntry {
   id: number;
@@ -40,7 +41,7 @@ const ZakatCalculator = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 pb-32">
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-max">
           {zakatEntries.map((entry) => (
@@ -57,10 +58,13 @@ const ZakatCalculator = () => {
         </div>
       </main>
 
+      {/* Calculation Summary Panel */}
+      <CalculationSummaryPanel zakatEntries={zakatEntries} />
+
       {/* Floating Action Button */}
       <button
         onClick={handleAddCard}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-md hover:scale-105 hover:brightness-110 transition-all duration-150 ease-in-out flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        className="fixed bottom-32 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-md hover:scale-105 hover:brightness-110 transition-all duration-150 ease-in-out flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         aria-label="Add new calculation"
       >
         <Plus size={24} strokeWidth={2} />
