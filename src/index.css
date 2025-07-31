@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -17,8 +17,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 140 66% 32%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -32,11 +32,17 @@ All colors MUST be HSL.
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
+    --border: 0 0% 88%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+    
+    /* Custom Material Design colors */
+    --material-background: 0 0% 98%;
+    --material-surface: 0 0% 100%;
+    --material-border: 0 0% 88%;
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
 
     --sidebar-background: 0 0% 98%;
 
