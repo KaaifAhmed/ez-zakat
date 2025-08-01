@@ -30,6 +30,14 @@ const ZakatCalculator = () => {
   const handleDelete = (id: number) => {
     setZakatEntries(prev => prev.filter(entry => entry.id !== id));
   };
+
+  const handleUpdateEntry = (id: number, field: keyof ZakatEntry, value: any) => {
+    setZakatEntries(prev => 
+      prev.map(entry => 
+        entry.id === id ? { ...entry, [field]: value } : entry
+      )
+    );
+  };
   return <div className="min-h-screen bg-background font-inter">
       {/* Top Header */}
       <header className="bg-card border-b border-border px-6 py-4">
@@ -43,7 +51,12 @@ const ZakatCalculator = () => {
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-max">
           {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in animate-scale-in">
-              <ZakatEntryCard onDelete={() => handleDelete(entry.id)} onEdit={() => {/* TODO: Add edit functionality */}} />
+              <ZakatEntryCard 
+                entry={entry}
+                onDelete={() => handleDelete(entry.id)} 
+                onEdit={() => {/* TODO: Add edit functionality */}}
+                onUpdateEntry={handleUpdateEntry}
+              />
             </div>)}
         </div>
       </main>
@@ -51,10 +64,16 @@ const ZakatCalculator = () => {
       {/* Calculation Summary Panel */}
       <CalculationSummaryPanel zakatEntries={zakatEntries} />
 
-      {/* Floating Action Button */}
-      <button onClick={handleAddCard} aria-label="Add new calculation" className="fixed bottom-32 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-md hover:scale-105 hover:brightness-110 transition-all duration-150 ease-in-out flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 z-50 ">
-        <Plus size={24} strokeWidth={2} />
-      </button>
+      {/* Floating Action Button - Now in Bottom Bar */}
+      <div className="fixed bottom-0 right-0 p-4 z-20">
+        <button 
+          onClick={handleAddCard} 
+          aria-label="Add new calculation" 
+          className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-md hover:scale-105 hover:brightness-110 transition-all duration-150 ease-in-out flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          <Plus size={24} strokeWidth={2} />
+        </button>
+      </div>
     </div>;
 };
 export default ZakatCalculator;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ChevronUp } from "lucide-react";
 
 interface ZakatEntry {
   id: number;
@@ -19,12 +20,22 @@ const CalculationSummaryPanel = ({ zakatEntries }: CalculationSummaryPanelProps)
   const [zakatDue, setZakatDue] = useState(0);
   
   const nisabThreshold = 275000; // PKR
+  const GOLD_RATE_PER_GRAM = 28200;
+  const SILVER_RATE_PER_GRAM = 350;
 
   useEffect(() => {
-    // Calculate total assets
+    // Calculate total assets with gold/silver conversion
     const assets = zakatEntries
       .filter(entry => entry.type === 'Asset')
-      .reduce((sum, entry) => sum + entry.amount, 0);
+      .reduce((sum, entry) => {
+        if (entry.category === 'Gold') {
+          return sum + (entry.amount * GOLD_RATE_PER_GRAM);
+        } else if (entry.category === 'Silver') {
+          return sum + (entry.amount * SILVER_RATE_PER_GRAM);
+        } else {
+          return sum + entry.amount;
+        }
+      }, 0);
     
     // Calculate total liabilities
     const liabilities = zakatEntries
@@ -41,47 +52,29 @@ const CalculationSummaryPanel = ({ zakatEntries }: CalculationSummaryPanelProps)
     setTotalLiabilities(liabilities);
     setNetZakatableAssets(netAssets);
     setZakatDue(zakat);
-  }, [zakatEntries, nisabThreshold]);
+  }, [zakatEntries, nisabThreshold, GOLD_RATE_PER_GRAM, SILVER_RATE_PER_GRAM]);
 
   const formatCurrency = (amount: number) => {
     return `PKR ${amount.toLocaleString('en-US')}`;
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-md p-4 z-10">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          {/* Total Assets */}
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground font-medium">Total Assets</p>
-            <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(totalAssets)}
-            </p>
-          </div>
-
-          {/* Total Liabilities */}
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground font-medium">Total Liabilities</p>
-            <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(totalLiabilities)}
-            </p>
-          </div>
-
-          {/* Nisab Threshold */}
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground font-medium">Nisab Threshold</p>
-            <p className="text-lg font-semibold text-foreground">
-              {formatCurrency(nisabThreshold)}
-            </p>
-          </div>
-
-          {/* Zakat Due - Most Prominent */}
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground font-medium">Zakat Due</p>
-            <p className="text-2xl font-bold text-primary">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg p-4 z-10">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        {/* Compact Summary - Left Side */}
+        <div className="flex items-center gap-3">
+          <div>
+            <span className="text-sm text-muted-foreground">Zakat Due: </span>
+            <span className="text-xl font-bold text-primary">
               {formatCurrency(zakatDue)}
-            </p>
+            </span>
           </div>
+          <button 
+            className="p-1 hover:bg-accent rounded-md transition-colors"
+            aria-label="Show detailed breakdown"
+          >
+            <ChevronUp size={20} className="text-muted-foreground" />
+          </button>
         </div>
       </div>
     </div>

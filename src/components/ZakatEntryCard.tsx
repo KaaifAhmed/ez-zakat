@@ -8,16 +8,26 @@ import { Label } from "@/components/ui/label";
 
 type EntryType = "Asset" | "Liability";
 
-interface ZakatEntryCardProps {
-  onDelete?: () => void;
-  onEdit?: () => void;
+interface ZakatEntry {
+  id: number;
+  type: 'Asset' | 'Liability';
+  category: string;
+  amount: number;
+  notes: string;
 }
 
-const ZakatEntryCard = ({ onDelete, onEdit }: ZakatEntryCardProps) => {
-  const [entryType, setEntryType] = useState<EntryType>("Asset");
-  const [category, setCategory] = useState<string>("");
-  const [amount, setAmount] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
+interface ZakatEntryCardProps {
+  entry: ZakatEntry;
+  onDelete?: () => void;
+  onEdit?: () => void;
+  onUpdateEntry?: (id: number, field: keyof ZakatEntry, value: any) => void;
+}
+
+const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCardProps) => {
+  const [entryType, setEntryType] = useState<EntryType>(entry.type);
+  const [category, setCategory] = useState<string>(entry.category);
+  const [amount, setAmount] = useState<string>(entry.amount.toString());
+  const [notes, setNotes] = useState<string>(entry.notes);
 
   const assetCategories = [
     "Cash",
@@ -39,6 +49,24 @@ const ZakatEntryCard = ({ onDelete, onEdit }: ZakatEntryCardProps) => {
   const handleTypeChange = (newType: EntryType) => {
     setEntryType(newType);
     setCategory("");
+    onUpdateEntry?.(entry.id, 'type', newType);
+    onUpdateEntry?.(entry.id, 'category', "");
+  };
+
+  const handleCategoryChange = (newCategory: string) => {
+    setCategory(newCategory);
+    onUpdateEntry?.(entry.id, 'category', newCategory);
+  };
+
+  const handleAmountChange = (newAmount: string) => {
+    setAmount(newAmount);
+    const numericAmount = parseFloat(newAmount) || 0;
+    onUpdateEntry?.(entry.id, 'amount', numericAmount);
+  };
+
+  const handleNotesChange = (newNotes: string) => {
+    setNotes(newNotes);
+    onUpdateEntry?.(entry.id, 'notes', newNotes);
   };
 
   // Dynamic label for amount/weight input
@@ -83,7 +111,7 @@ const ZakatEntryCard = ({ onDelete, onEdit }: ZakatEntryCardProps) => {
         <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">
           Category
         </Label>
-        <Select value={category} onValueChange={setCategory}>
+        <Select value={category} onValueChange={handleCategoryChange}>
           <SelectTrigger id="category" className="bg-background">
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
@@ -106,7 +134,7 @@ const ZakatEntryCard = ({ onDelete, onEdit }: ZakatEntryCardProps) => {
           id="amount"
           type="number"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => handleAmountChange(e.target.value)}
           placeholder={category === "Gold" || category === "Silver" ? "Enter weight" : "Enter amount"}
           className="bg-background"
         />
@@ -120,7 +148,7 @@ const ZakatEntryCard = ({ onDelete, onEdit }: ZakatEntryCardProps) => {
         <Textarea
           id="notes"
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e) => handleNotesChange(e.target.value)}
           placeholder="Add any additional notes..."
           className="bg-background min-h-[80px] resize-none"
         />
