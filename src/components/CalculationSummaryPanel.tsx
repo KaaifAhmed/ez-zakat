@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, Plus } from "lucide-react";
 
 interface ZakatEntry {
   id: number;
@@ -11,9 +11,10 @@ interface ZakatEntry {
 
 interface CalculationSummaryPanelProps {
   zakatEntries: ZakatEntry[];
+  onAddCard?: () => void;
 }
 
-const CalculationSummaryPanel = ({ zakatEntries }: CalculationSummaryPanelProps) => {
+const CalculationSummaryPanel = ({ zakatEntries, onAddCard }: CalculationSummaryPanelProps) => {
   const [totalAssets, setTotalAssets] = useState(0);
   const [totalLiabilities, setTotalLiabilities] = useState(0);
   const [netZakatableAssets, setNetZakatableAssets] = useState(0);
@@ -59,21 +60,40 @@ const CalculationSummaryPanel = ({ zakatEntries }: CalculationSummaryPanelProps)
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg p-4 z-10">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Compact Summary - Left Side */}
-        <div className="flex items-center gap-3">
-          <div>
-            <span className="text-sm text-muted-foreground">Zakat Due: </span>
-            <span className="text-xl font-bold text-primary">
-              {formatCurrency(zakatDue)}
-            </span>
+    <div className="fixed bottom-0 left-0 right-0 bg-surface-elevated/95 backdrop-blur-sm border-t border-border/50 shadow-lg z-10">
+      <div className="relative">
+        {/* Subtle gradient border top */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+          {/* Compact Summary - Left Side */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <span className="text-primary font-semibold text-sm">₨</span>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground block">Zakat Due</span>
+                <span className="text-xl font-bold text-primary">
+                  {formatCurrency(zakatDue)}
+                </span>
+              </div>
+            </div>
+            <button 
+              className="p-2 hover:bg-accent rounded-lg transition-all duration-200 hover:scale-105 group"
+              aria-label="Show detailed breakdown"
+            >
+              <ChevronUp size={18} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+            </button>
           </div>
+          
+          {/* Integrated FAB - Right Side */}
           <button 
-            className="p-1 hover:bg-accent rounded-md transition-colors"
-            aria-label="Show detailed breakdown"
+            onClick={onAddCard} 
+            aria-label="Add new calculation" 
+            className="h-12 w-12 bg-primary text-primary-foreground rounded-xl shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 ease-out flex items-center justify-center group"
           >
-            <ChevronUp size={20} className="text-muted-foreground" />
+            <Plus size={20} strokeWidth={2.5} className="group-active:rotate-90 transition-transform duration-200" />
           </button>
         </div>
       </div>

@@ -45,8 +45,16 @@ All colors MUST be HSL.
     --material-muted-icon: 0 0% 46%;
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
     --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
     --space-md: 16px;
     --radius-md: 8px;
+    
+    /* Enhanced surface colors for depth */
+    --surface-elevated: 0 0% 99%;
+    --surface-card: 0 0% 99.5%;
+    
+    /* Gold accent for visual polish */
+    --gold-accent: 45 90% 52%;
 
     --sidebar-background: 0 0% 98%;
 

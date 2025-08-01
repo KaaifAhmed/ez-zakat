@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Calculator } from "lucide-react";
 import ZakatEntryCard from "@/components/ZakatEntryCard";
 import CalculationSummaryPanel from "@/components/CalculationSummaryPanel";
 interface ZakatEntry {
@@ -40,17 +40,27 @@ const ZakatCalculator = () => {
   };
   return <div className="min-h-screen bg-background font-inter">
       {/* Top Header */}
-      <header className="bg-card border-b border-border px-6 py-4">
-        <h1 className="text-xl font-bold text-foreground">
-          Zakat Calculator
-        </h1>
+      <header className="bg-surface-elevated border-b border-border px-6 py-6 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Calculator className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">
+              Zakat Calculator
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Track and fulfill your zakat easily
+            </p>
+          </div>
+        </div>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 pb-36 mb-10 ">
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-max">
-          {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in animate-scale-in">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-max">
+          {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in-up">
               <ZakatEntryCard 
                 entry={entry}
                 onDelete={() => handleDelete(entry.id)} 
@@ -61,19 +71,8 @@ const ZakatCalculator = () => {
         </div>
       </main>
 
-      {/* Calculation Summary Panel */}
-      <CalculationSummaryPanel zakatEntries={zakatEntries} />
-
-      {/* Floating Action Button - Now in Bottom Bar */}
-      <div className="fixed bottom-0 right-0 p-4 z-20">
-        <button 
-          onClick={handleAddCard} 
-          aria-label="Add new calculation" 
-          className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-md hover:scale-105 hover:brightness-110 transition-all duration-150 ease-in-out flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-        >
-          <Plus size={24} strokeWidth={2} />
-        </button>
-      </div>
+      {/* Calculation Summary Panel with integrated FAB */}
+      <CalculationSummaryPanel zakatEntries={zakatEntries} onAddCard={handleAddCard} />
     </div>;
 };
 export default ZakatCalculator;

@@ -78,11 +78,11 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
   };
 
   return (
-    <div className="bg-card rounded-material-md shadow-sm p-md border border-border/50 hover:shadow-md transition-shadow duration-200">
+    <div className="bg-surface-card rounded-xl shadow-card p-6 border border-border/30 hover:shadow-md hover:border-border/60 transition-all duration-200 group">
       {/* Type Selector - Segmented Control */}
-      <div className="mb-4">
-        <Label className="text-sm font-medium text-foreground mb-2 block">Type</Label>
-        <div className="flex bg-muted rounded-md p-1">
+      <div className="mb-6">
+        <Label className="text-sm font-medium text-foreground mb-3 block">Type</Label>
+        <div className="flex bg-muted/50 rounded-lg p-1 border border-border/20">
           <button
             onClick={() => handleTypeChange("Asset")}
             className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-all duration-150 ${
@@ -107,8 +107,8 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
       </div>
 
       {/* Category Selector */}
-      <div className="mb-4">
-        <Label htmlFor="category" className="text-sm font-medium text-foreground mb-2 block">
+      <div className="mb-5">
+        <Label htmlFor="category" className="text-sm font-medium text-foreground mb-3 block">
           Category
         </Label>
         <Select value={category} onValueChange={handleCategoryChange}>
@@ -126,8 +126,8 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
       </div>
 
       {/* Amount/Weight Input */}
-      <div className="mb-4">
-        <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-2 block">
+      <div className="mb-5">
+        <Label htmlFor="amount" className="text-sm font-medium text-foreground mb-3 block">
           {getAmountLabel()}
         </Label>
         <Input
@@ -141,8 +141,8 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
       </div>
 
       {/* Notes Field */}
-      <div className="mb-6">
-        <Label htmlFor="notes" className="text-sm font-medium text-foreground mb-2 block">
+      <div className="mb-8">
+        <Label htmlFor="notes" className="text-sm font-medium text-foreground mb-3 block">
           Notes (optional)
         </Label>
         <Textarea
@@ -155,12 +155,12 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
       </div>
 
       {/* Action Icons */}
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
         <Button
           variant="ghost"
           size="icon"
           onClick={onEdit}
-          className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150"
         >
           <Edit3 size={16} />
         </Button>
@@ -168,7 +168,7 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
           variant="ghost"
           size="icon"
           onClick={onDelete}
-          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150"
         >
           <Trash2 size={16} />
         </Button>
