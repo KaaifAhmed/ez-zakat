@@ -129,7 +129,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
       )}
 
       {/* Compact Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-surface-elevated/95 backdrop-blur-sm border-t border-border/50 shadow-lg z-10">
+      <div className="fixed bottom-0 left-0 right-0 bg-surface-elevated/95 backdrop-blur-sm border-t border-border/50 shadow-lg z-30">
         <div className="relative">
           {/* Subtle gradient border top */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />

@@ -39,7 +39,7 @@ const ZakatCalculator = () => {
       )
     );
   };
-  return <div className="min-h-screen bg-background font-inter">
+  return <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 font-inter relative">
       {/* Top Header */}
       <header className="bg-surface-elevated border-b border-border px-6 py-6 shadow-sm">
         <div className="flex items-center gap-3">
@@ -58,7 +58,7 @@ const ZakatCalculator = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 pb-36 mb-10 ">
+      <main className="flex-1 p-6 pb-36 mb-10 relative z-10">
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-max">
           {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in-up">
