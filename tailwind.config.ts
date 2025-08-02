@@ -139,6 +139,14 @@ export default {
 						transform: 'scale(1.05)',
 						opacity: '0.9'
 					}
+				},
+				'slide-in-bottom': {
+					'0%': {
+						transform: 'translateY(100%)'
+					},
+					'100%': {
+						transform: 'translateY(0)'
+					}
 				}
 			},
 			animation: {
@@ -147,7 +155,8 @@ export default {
 				'fade-in-up': 'fade-in-up 0.3s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
 				'scale-in': 'scale-in 0.2s ease-out',
-				'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite'
+				'pulse-gentle': 'pulse-gentle 2s ease-in-out infinite',
+				'slide-in-bottom': 'slide-in-bottom 0.3s ease-out'
 			}
 		}
 	},

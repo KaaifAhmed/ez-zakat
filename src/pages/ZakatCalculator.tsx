@@ -17,6 +17,7 @@ const ZakatCalculator = () => {
     amount: 0,
     notes: ''
   }]);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const handleAddCard = () => {
     const newEntry: ZakatEntry = {
       id: Date.now(),
@@ -72,7 +73,12 @@ const ZakatCalculator = () => {
       </main>
 
       {/* Calculation Summary Panel with integrated FAB */}
-      <CalculationSummaryPanel zakatEntries={zakatEntries} onAddCard={handleAddCard} />
+      <CalculationSummaryPanel 
+        zakatEntries={zakatEntries} 
+        onAddCard={handleAddCard}
+        isSummaryExpanded={isSummaryExpanded}
+        onToggleSummary={() => setIsSummaryExpanded(!isSummaryExpanded)}
+      />
     </div>;
 };
 export default ZakatCalculator;
