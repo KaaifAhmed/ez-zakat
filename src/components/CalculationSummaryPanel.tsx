@@ -55,68 +55,73 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
 
   return (
     <>
-      {/* Overlay */}
+      {/* Modal Bottom Sheet */}
       {isSummaryExpanded && (
         <div 
-          className="fixed inset-0 bg-black/40 z-40 animate-fade-in"
+          className="fixed top-0 left-0 w-screen h-screen z-50 bg-black/50"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
           onClick={onToggleSummary}
-        />
-      )}
-
-      {/* Bottom Sheet Panel */}
-      {isSummaryExpanded && (
-        <div className="fixed inset-x-0 bottom-0 z-50 bg-surface rounded-t-xl shadow-2xl transform transition-transform duration-300 ease-out animate-slide-in-bottom">
-          <div className="h-[60vh] overflow-y-auto">
+        >
+          {/* Bottom Sheet Panel */}
+          <div 
+            className="absolute bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out"
+            style={{ 
+              borderTopLeftRadius: '16px', 
+              borderTopRightRadius: '16px',
+              maxHeight: '60vh'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Zakat Calculation Details</h2>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Zakat Calculation Summary</h2>
               <button 
                 onClick={onToggleSummary}
                 className="p-2 hover:bg-accent rounded-lg transition-colors"
                 aria-label="Close panel"
               >
-                <X size={18} className="text-muted-foreground" />
+                <X size={20} className="text-muted-foreground" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Assets and Liabilities */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Total Assets</span>
-                  <span className="font-semibold text-foreground">{formatCurrency(totalAssets)}</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Total Liabilities</span>
-                  <span className="font-semibold text-destructive">- {formatCurrency(totalLiabilities)}</span>
-                </div>
-                
-                <div className="border-t border-border pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Net Zakatable Assets</span>
-                    <span className="font-semibold text-foreground">{formatCurrency(netZakatableAssets)}</span>
-                  </div>
-                </div>
+            <div className="px-6 py-4 space-y-4 overflow-y-auto max-h-96">
+              {/* Total Assets */}
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Assets</span>
+                <span className="font-semibold text-foreground">{formatCurrency(totalAssets)}</span>
               </div>
-
-              {/* Nisab Information */}
-              <div className="bg-accent/50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between items-center">
+              
+              {/* Total Liabilities */}
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Liabilities</span>
+                <span className="font-semibold text-destructive">- {formatCurrency(totalLiabilities)}</span>
+              </div>
+              
+              {/* Divider */}
+              <div className="border-t border-border my-4"></div>
+              
+              {/* Net Zakatable Assets */}
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Net Zakatable Assets</span>
+                <span className="font-semibold text-foreground">{formatCurrency(netZakatableAssets)}</span>
+              </div>
+              
+              {/* Nisab Threshold */}
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
                   <span className="text-muted-foreground">Nisab Threshold</span>
-                  <span className="font-semibold text-foreground">{formatCurrency(nisabThreshold)}</span>
+                  <span className="text-xs text-muted-foreground">Based on 87.48g of silver</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Info size={14} />
-                  <span>Based on 87.48g of silver (612.36 × PKR {SILVER_RATE_PER_GRAM})</span>
-                </div>
+                <span className="font-semibold text-foreground">{formatCurrency(nisabThreshold)}</span>
               </div>
-
-              {/* Final Zakat Due */}
-              <div className="bg-primary/5 rounded-lg p-6 text-center border border-primary/20">
-                <div className="text-sm text-muted-foreground mb-2">Final Zakat Due</div>
-                <div className="text-3xl font-bold text-primary">{formatCurrency(zakatDue)}</div>
+              
+              {/* Final Zakat Due - Most Prominent */}
+              <div className="bg-primary/5 rounded-lg p-4 mt-6 border border-primary/20">
+                <div className="flex justify-between items-center">
+                  <span className="text-xl font-bold text-foreground">Zakat Due</span>
+                  <span className="text-2xl font-bold text-primary">{formatCurrency(zakatDue)}</span>
+                </div>
                 {zakatDue === 0 && (
                   <div className="text-xs text-muted-foreground mt-2">
                     {netZakatableAssets < nisabThreshold ? 'Below Nisab threshold' : 'No zakat due'}
