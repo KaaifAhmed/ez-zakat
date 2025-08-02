@@ -58,15 +58,15 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
       {/* Overlay */}
       {isSummaryExpanded && (
         <div 
-          className="fixed inset-0 bg-black/40 z-40 animate-fade-in"
+          className="fixed inset-0 bg-black/20 z-40 animate-fade-in"
           onClick={onToggleSummary}
         />
       )}
 
       {/* Bottom Sheet Panel */}
       {isSummaryExpanded && (
-        <div className="fixed inset-x-0 bottom-0 z-50 bg-surface rounded-t-xl shadow-2xl transform transition-transform duration-300 ease-out animate-slide-in-bottom">
-          <div className="h-[60vh] overflow-y-auto">
+        <div className="fixed inset-x-0 bottom-0 z-50 bg-surface rounded-t-xl shadow-2xl transform transition-transform duration-300 ease-out animate-slide-in-bottom max-h-[60vh]">
+          <div className="h-full overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-lg font-semibold text-foreground">Zakat Calculation Details</h2>
