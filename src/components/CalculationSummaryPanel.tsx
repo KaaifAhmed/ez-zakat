@@ -21,6 +21,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
   const [totalLiabilities, setTotalLiabilities] = useState(0);
   const [netZakatableAssets, setNetZakatableAssets] = useState(0);
   const [zakatDue, setZakatDue] = useState(0);
+  const [animatedZakatDue, setAnimatedZakatDue] = useState(0);
   
   const nisabThreshold = 275000; // PKR
   const GOLD_RATE_PER_GRAM = 28200;
@@ -49,6 +50,31 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
     setZakatDue(zakat);
   }, [zakatEntries, nisabThreshold, GOLD_RATE_PER_GRAM, SILVER_RATE_PER_GRAM]);
 
+  // Count-up animation for Zakat Due
+  useEffect(() => {
+    if (isSummaryExpanded && zakatDue > 0) {
+      setAnimatedZakatDue(0);
+      const duration = 800; // 800ms animation
+      const steps = 30;
+      const increment = zakatDue / steps;
+      
+      let currentStep = 0;
+      const timer = setInterval(() => {
+        currentStep++;
+        if (currentStep >= steps) {
+          setAnimatedZakatDue(zakatDue);
+          clearInterval(timer);
+        } else {
+          setAnimatedZakatDue(Math.floor(increment * currentStep));
+        }
+      }, duration / steps);
+      
+      return () => clearInterval(timer);
+    } else {
+      setAnimatedZakatDue(zakatDue);
+    }
+  }, [zakatDue, isSummaryExpanded]);
+
   const formatCurrency = (amount: number) => {
     return `PKR ${amount.toLocaleString('en-US')}`;
   };
@@ -64,11 +90,11 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
         >
           {/* Bottom Sheet Panel */}
           <div 
-            className="absolute bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out"
+            className="absolute bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out overflow-y-auto"
             style={{ 
               borderTopLeftRadius: '16px', 
               borderTopRightRadius: '16px',
-              maxHeight: '60vh'
+              maxHeight: '85vh'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -77,38 +103,53 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
               <h2 className="text-lg font-semibold text-foreground">Zakat Calculation Summary</h2>
               <button 
                 onClick={onToggleSummary}
-                className="p-2 hover:bg-accent rounded-lg transition-colors"
+                className="p-2 hover:bg-accent rounded-lg transition-all duration-200 hover:scale-110 hover:rotate-90 group"
                 aria-label="Close panel"
               >
-                <X size={20} className="text-muted-foreground" />
+                <X size={20} className="text-muted-foreground group-hover:text-foreground transition-all duration-200" />
               </button>
             </div>
 
             {/* Content */}
             <div className="px-6 py-4 space-y-4 overflow-y-auto max-h-96">
               {/* Total Assets */}
-              <div className="flex justify-between items-center">
+              <div 
+                className="flex justify-between items-center opacity-0 translate-y-4 animate-fade-in"
+                style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}
+              >
                 <span className="text-muted-foreground">Total Assets</span>
                 <span className="font-semibold text-foreground">{formatCurrency(totalAssets)}</span>
               </div>
               
               {/* Total Liabilities */}
-              <div className="flex justify-between items-center">
+              <div 
+                className="flex justify-between items-center opacity-0 translate-y-4 animate-fade-in"
+                style={{ animationDelay: '75ms', animationFillMode: 'forwards' }}
+              >
                 <span className="text-muted-foreground">Total Liabilities</span>
                 <span className="font-semibold text-destructive">- {formatCurrency(totalLiabilities)}</span>
               </div>
               
               {/* Divider */}
-              <div className="border-t border-border my-4"></div>
+              <div 
+                className="border-t border-border my-4 opacity-0 animate-fade-in"
+                style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}
+              ></div>
               
               {/* Net Zakatable Assets */}
-              <div className="flex justify-between items-center">
+              <div 
+                className="flex justify-between items-center opacity-0 translate-y-4 animate-fade-in"
+                style={{ animationDelay: '225ms', animationFillMode: 'forwards' }}
+              >
                 <span className="text-muted-foreground">Net Zakatable Assets</span>
                 <span className="font-semibold text-foreground">{formatCurrency(netZakatableAssets)}</span>
               </div>
               
               {/* Nisab Threshold */}
-              <div className="flex justify-between items-center">
+              <div 
+                className="flex justify-between items-center opacity-0 translate-y-4 animate-fade-in"
+                style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}
+              >
                 <div className="flex flex-col">
                   <span className="text-muted-foreground">Nisab Threshold</span>
                   <span className="text-xs text-muted-foreground">Based on 87.48g of silver</span>
@@ -117,10 +158,13 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
               </div>
               
               {/* Final Zakat Due - Most Prominent */}
-              <div className="bg-primary/5 rounded-lg p-4 mt-6 border border-primary/20">
+              <div 
+                className="bg-primary/5 rounded-lg p-4 mt-6 border border-primary/20 opacity-0 translate-y-4 animate-fade-in"
+                style={{ animationDelay: '375ms', animationFillMode: 'forwards' }}
+              >
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-bold text-foreground">Zakat Due</span>
-                  <span className="text-2xl font-bold text-primary">{formatCurrency(zakatDue)}</span>
+                  <span className="text-2xl font-bold text-primary">{formatCurrency(animatedZakatDue)}</span>
                 </div>
                 {zakatDue === 0 && (
                   <div className="text-xs text-muted-foreground mt-2">
