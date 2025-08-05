@@ -30,6 +30,8 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
   const [entryType, setEntryType] = useState<EntryType>(entry.type);
   const [category, setCategory] = useState<string>(entry.category);
   const [amount, setAmount] = useState<string>(entry.amount.toString());
+  const [displayAmount, setDisplayAmount] = useState<string>(entry.amount.toString());
+  const [isAmountFocused, setIsAmountFocused] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>(entry.notes);
   const [karat, setKarat] = useState<string>(entry.karat || "");
   const [weight, setWeight] = useState<string>(entry.weight?.toString() || "");
@@ -102,8 +104,22 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
 
   const handleAmountChange = (newAmount: string) => {
     setAmount(newAmount);
+    setDisplayAmount(newAmount);
     const numericAmount = parseFloat(newAmount) || 0;
     onUpdateEntry?.(entry.id, 'amount', numericAmount);
+  };
+
+  const handleAmountFocus = () => {
+    setIsAmountFocused(true);
+    setDisplayAmount(amount);
+  };
+
+  const handleAmountBlur = () => {
+    setIsAmountFocused(false);
+    if (amount && !isNaN(parseFloat(amount))) {
+      const formatted = new Intl.NumberFormat().format(parseFloat(amount));
+      setDisplayAmount(formatted);
+    }
   };
 
   const handleWeightChange = (newWeight: string) => {
@@ -284,9 +300,11 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
         ) : (
           <Input
             id="amount"
-            type="number"
-            value={amount === '0' ? '' : amount}
-            onChange={(e) => handleAmountChange(e.target.value)}
+            type="text"
+            value={isAmountFocused ? amount : displayAmount}
+            onChange={(e) => handleAmountChange(e.target.value.replace(/,/g, ''))}
+            onFocus={handleAmountFocus}
+            onBlur={handleAmountBlur}
             placeholder="Enter amount"
             className="bg-background"
           />

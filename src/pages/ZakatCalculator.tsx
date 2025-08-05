@@ -10,18 +10,25 @@ interface ZakatEntry {
   notes: string;
 }
 const ZakatCalculator = () => {
-  const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([{
-    id: 1,
-    type: 'Asset',
-    category: 'Cash',
-    amount: '',
-    notes: 'e.g., Cash in bank account'
-  }]);
+  const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([]);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
   const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory'];
 
   const handleAddCard = () => {
+    // If no cards exist, add the pre-filled example card
+    if (zakatEntries.length === 0) {
+      const exampleCard: ZakatEntry = {
+        id: Date.now(),
+        type: 'Asset',
+        category: 'Cash',
+        amount: '250000',
+        notes: 'Cash in hand'
+      };
+      setZakatEntries([exampleCard]);
+      return;
+    }
+
     // Get the last card's category to determine the next one
     const lastEntry = zakatEntries[zakatEntries.length - 1];
     const lastCategoryIndex = categorySequence.indexOf(lastEntry.category);
