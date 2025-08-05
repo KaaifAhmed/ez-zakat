@@ -12,7 +12,7 @@ interface ZakatEntry {
   id: number;
   type: 'Asset' | 'Liability';
   category: string;
-  amount: number;
+  amount: number | string;
   notes: string;
   karat?: string;
   weight?: number;
@@ -26,7 +26,7 @@ interface ZakatEntryCardProps {
 }
 
 const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCardProps) => {
-  const [isEditing, setIsEditing] = useState<boolean>(entry.amount === 0); // New cards start in edit mode
+  const [isEditing, setIsEditing] = useState<boolean>(entry.amount === '' || entry.amount === 0); // New cards start in edit mode
   const [entryType, setEntryType] = useState<EntryType>(entry.type);
   const [category, setCategory] = useState<string>(entry.category);
   const [amount, setAmount] = useState<string>(entry.amount.toString());
@@ -285,7 +285,7 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
           <Input
             id="amount"
             type="number"
-            value={amount}
+            value={amount === '0' ? '' : amount}
             onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="Enter amount"
             className="bg-background"

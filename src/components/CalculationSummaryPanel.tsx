@@ -5,7 +5,7 @@ interface ZakatEntry {
   id: number;
   type: 'Asset' | 'Liability';
   category: string;
-  amount: number;
+  amount: number | string;
   notes: string;
 }
 
@@ -31,12 +31,12 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
     // Calculate total assets - for gold/silver, use entered amount directly (already calculated with karat rates)
     const assets = zakatEntries
       .filter(entry => entry.type === 'Asset')
-      .reduce((sum, entry) => sum + entry.amount, 0);
+      .reduce((sum, entry) => sum + (typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount), 0);
     
     // Calculate total liabilities
     const liabilities = zakatEntries
       .filter(entry => entry.type === 'Liability')
-      .reduce((sum, entry) => sum + entry.amount, 0);
+      .reduce((sum, entry) => sum + (typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount), 0);
     
     // Calculate net zakatable assets
     const netAssets = assets - liabilities;
@@ -76,7 +76,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
   }, [zakatDue, isSummaryExpanded]);
 
   const formatCurrency = (amount: number) => {
-    return `PKR ${amount.toLocaleString('en-US')}`;
+    return `PKR ${new Intl.NumberFormat('en-US').format(amount)}`;
   };
 
   return (
