@@ -5,9 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-
 type EntryType = "Asset" | "Liability";
-
 interface ZakatEntry {
   id: number;
   type: 'Asset' | 'Liability';
@@ -17,15 +15,18 @@ interface ZakatEntry {
   karat?: string;
   weight?: number;
 }
-
 interface ZakatEntryCardProps {
   entry: ZakatEntry;
   onDelete?: () => void;
   onEdit?: () => void;
   onUpdateEntry?: (id: number, field: keyof ZakatEntry, value: any) => void;
 }
-
-const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCardProps) => {
+const ZakatEntryCard = ({
+  entry,
+  onDelete,
+  onEdit,
+  onUpdateEntry
+}: ZakatEntryCardProps) => {
   const [isEditing, setIsEditing] = useState<boolean>(entry.amount === '' || entry.amount === 0); // New cards start in edit mode
   const [entryType, setEntryType] = useState<EntryType>(entry.type);
   const [category, setCategory] = useState<string>(entry.category);
@@ -35,34 +36,19 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
   const [notes, setNotes] = useState<string>(entry.notes);
   const [karat, setKarat] = useState<string>(entry.karat || "");
   const [weight, setWeight] = useState<string>(entry.weight?.toString() || "");
-
-  const assetCategories = [
-    "Cash",
-    "Gold", 
-    "Silver",
-    "Business Inventory",
-    "Receivables"
-  ];
-
-  const liabilityCategories = [
-    "Personal Debt",
-    "Business Loan", 
-    "Other Payables"
-  ];
-
+  const assetCategories = ["Cash", "Gold", "Silver", "Business Inventory", "Receivables"];
+  const liabilityCategories = ["Personal Debt", "Business Loan", "Other Payables"];
   const goldKaratRates = {
     "24K": 30650,
     "22K": 28100,
     "21K": 26800,
     "18K": 23000
   };
-
   const silverKaratRates = {
     "24K": 340,
     "22K": 310,
     "21K": 290
   };
-
   const currentCategories = entryType === "Asset" ? assetCategories : liabilityCategories;
   const isGoldOrSilver = category === "Gold" || category === "Silver";
 
@@ -90,7 +76,6 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
     onUpdateEntry?.(entry.id, 'karat', "");
     onUpdateEntry?.(entry.id, 'weight', 0);
   };
-
   const handleCategoryChange = (newCategory: string) => {
     setCategory(newCategory);
     setKarat("");
@@ -101,19 +86,16 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
     onUpdateEntry?.(entry.id, 'weight', 0);
     onUpdateEntry?.(entry.id, 'amount', 0);
   };
-
   const handleAmountChange = (newAmount: string) => {
     setAmount(newAmount);
     setDisplayAmount(newAmount);
     const numericAmount = parseFloat(newAmount) || 0;
     onUpdateEntry?.(entry.id, 'amount', numericAmount);
   };
-
   const handleAmountFocus = () => {
     setIsAmountFocused(true);
     setDisplayAmount(amount);
   };
-
   const handleAmountBlur = () => {
     setIsAmountFocused(false);
     if (amount && !isNaN(parseFloat(amount))) {
@@ -121,44 +103,34 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
       setDisplayAmount(formatted);
     }
   };
-
   const handleWeightChange = (newWeight: string) => {
     setWeight(newWeight);
     const numericWeight = parseFloat(newWeight) || 0;
     onUpdateEntry?.(entry.id, 'weight', numericWeight);
   };
-
   const handleKaratChange = (newKarat: string) => {
     setKarat(newKarat);
     onUpdateEntry?.(entry.id, 'karat', newKarat);
   };
-
   const handleNotesChange = (newNotes: string) => {
     setNotes(newNotes);
     onUpdateEntry?.(entry.id, 'notes', newNotes);
   };
-
   const formatAmount = (amount: number) => {
     return `PKR ${amount.toLocaleString('en-US')}`;
   };
-
   if (!isEditing) {
     // View Mode - Display only
-    return (
-      <div className="bg-surface-card rounded-xl shadow-card p-6 border border-border/30 hover:shadow-md hover:border-border/60 transition-all duration-300 group scale-95 hover:scale-100">
+    return <div className="bg-surface-card rounded-xl shadow-card p-6 border border-border/30 hover:shadow-md hover:border-border/60 transition-all duration-300 group scale-95 hover:scale-100">
         <div className="space-y-4">
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {entryType}
-              </span>
+              
               <h3 className="text-lg font-bold text-foreground mt-1">
                 {category || "No category"}
               </h3>
             </div>
-            <span className={`px-2 py-1 rounded text-xs font-medium ${
-              entryType === "Asset" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-            }`}>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${entryType === "Asset" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>
               {entryType}
             </span>
           </div>
@@ -171,72 +143,42 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
               </p>
             </div>
             
-            {isGoldOrSilver && karat && (
-              <div>
+            {isGoldOrSilver && karat && <div>
                 <span className="text-sm text-muted-foreground">Karat & Weight:</span>
                 <p className="text-sm font-medium text-foreground">
                   {karat} • {weight}g
                 </p>
-              </div>
-            )}
+              </div>}
             
-            {notes && (
-              <div>
+            {notes && <div>
                 <span className="text-sm text-muted-foreground">Notes:</span>
                 <p className="text-sm text-foreground">{notes}</p>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
         
         {/* Action Icons */}
         <div className="flex justify-end gap-2 mt-4 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing(true)}
-            className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150">
             <Edit3 size={16} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onDelete}
-            className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150"
-          >
+          <Button variant="ghost" size="icon" onClick={onDelete} className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150">
             <Trash2 size={16} />
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Edit Mode - Full form
-  return (
-    <div className="bg-surface-card rounded-xl shadow-elevated p-6 border border-border/30 hover:shadow-md hover:border-border/60 transition-all duration-300 group">
+  return <div className="bg-surface-card rounded-xl shadow-elevated p-6 border border-border/30 hover:shadow-md hover:border-border/60 transition-all duration-300 group">
       {/* Type Selector - Segmented Control */}
       <div className="mb-6">
         <Label className="text-sm font-medium text-foreground mb-3 block">Type</Label>
         <div className="flex bg-muted/50 rounded-lg p-1 border border-border/20">
-          <button
-            onClick={() => handleTypeChange("Asset")}
-            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-all duration-150 ${
-              entryType === "Asset"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+          <button onClick={() => handleTypeChange("Asset")} className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-all duration-150 ${entryType === "Asset" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
             Asset
           </button>
-          <button
-            onClick={() => handleTypeChange("Liability")}
-            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-all duration-150 ${
-              entryType === "Liability"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+          <button onClick={() => handleTypeChange("Liability")} className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-all duration-150 ${entryType === "Liability" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
             Liability
           </button>
         </div>
@@ -252,18 +194,15 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
           <SelectContent className="bg-background border border-border shadow-md z-50">
-            {currentCategories.map((cat) => (
-              <SelectItem key={cat} value={cat} className="hover:bg-accent hover:text-accent-foreground">
+            {currentCategories.map(cat => <SelectItem key={cat} value={cat} className="hover:bg-accent hover:text-accent-foreground">
                 {cat}
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
       {/* Karat Selection for Gold/Silver */}
-      {isGoldOrSilver && (
-        <div className="mb-5">
+      {isGoldOrSilver && <div className="mb-5">
           <Label htmlFor="karat" className="text-sm font-medium text-foreground mb-3 block">
             Karat
           </Label>
@@ -272,48 +211,23 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
               <SelectValue placeholder="Select karat" />
             </SelectTrigger>
             <SelectContent className="bg-background border border-border shadow-md z-50">
-              {Object.entries(category === "Gold" ? goldKaratRates : silverKaratRates).map(([karatValue, rate]) => (
-                <SelectItem key={karatValue} value={karatValue} className="hover:bg-accent hover:text-accent-foreground">
+              {Object.entries(category === "Gold" ? goldKaratRates : silverKaratRates).map(([karatValue, rate]) => <SelectItem key={karatValue} value={karatValue} className="hover:bg-accent hover:text-accent-foreground">
                   {karatValue} (PKR {rate.toLocaleString()}/gram)
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
           </Select>
-        </div>
-      )}
+        </div>}
 
       {/* Weight Input for Gold/Silver or Amount Input for others */}
       <div className="mb-5">
         <Label htmlFor={isGoldOrSilver ? "weight" : "amount"} className="text-sm font-medium text-foreground mb-3 block">
           {isGoldOrSilver ? "Weight (grams)" : "Amount (PKR)"}
         </Label>
-        {isGoldOrSilver ? (
-          <Input
-            id="weight"
-            type="number"
-            value={weight}
-            onChange={(e) => handleWeightChange(e.target.value)}
-            placeholder="Enter weight in grams"
-            className="bg-background"
-            disabled={!karat}
-          />
-        ) : (
-          <Input
-            id="amount"
-            type="text"
-            value={isAmountFocused ? amount : displayAmount}
-            onChange={(e) => handleAmountChange(e.target.value.replace(/,/g, ''))}
-            onFocus={handleAmountFocus}
-            onBlur={handleAmountBlur}
-            placeholder="Enter amount"
-            className="bg-background"
-          />
-        )}
+        {isGoldOrSilver ? <Input id="weight" type="number" value={weight} onChange={e => handleWeightChange(e.target.value)} placeholder="Enter weight in grams" className="bg-background" disabled={!karat} /> : <Input id="amount" type="text" value={isAmountFocused ? amount : displayAmount} onChange={e => handleAmountChange(e.target.value.replace(/,/g, ''))} onFocus={handleAmountFocus} onBlur={handleAmountBlur} placeholder="Enter amount" className="bg-background" />}
       </div>
 
       {/* Calculated Amount Display for Gold/Silver */}
-      {isGoldOrSilver && karat && weight && (
-        <div className="mb-5 p-4 bg-muted/30 rounded-lg border border-border/20">
+      {isGoldOrSilver && karat && weight && <div className="mb-5 p-4 bg-muted/30 rounded-lg border border-border/20">
           <Label className="text-sm font-medium text-foreground mb-2 block">
             Calculated Value
           </Label>
@@ -323,54 +237,30 @@ const ZakatEntryCard = ({ entry, onDelete, onEdit, onUpdateEntry }: ZakatEntryCa
           <div className="text-sm text-muted-foreground">
             {weight}g × PKR {(category === "Gold" ? goldKaratRates : silverKaratRates)[karat as keyof typeof goldKaratRates]?.toLocaleString()}/gram
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Notes Field */}
       <div className="mb-8">
         <Label htmlFor="notes" className="text-sm font-medium text-foreground mb-3 block">
           Notes (optional)
         </Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => handleNotesChange(e.target.value)}
-          placeholder="Add any additional notes..."
-          className="bg-background min-h-[80px] resize-none"
-        />
+        <Textarea id="notes" value={notes} onChange={e => handleNotesChange(e.target.value)} placeholder="Add any additional notes..." className="bg-background min-h-[80px] resize-none" />
       </div>
 
       {/* Action Icons */}
       <div className="flex justify-between items-center">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsEditing(false)}
-          className="text-sm"
-        >
+        <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} className="text-sm">
           Done Editing
         </Button>
         <div className="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onEdit}
-            className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150"
-          >
+          <Button variant="ghost" size="icon" onClick={onEdit} className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150">
             <Edit3 size={16} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onDelete}
-            className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150"
-          >
+          <Button variant="ghost" size="icon" onClick={onDelete} className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150">
             <Trash2 size={16} />
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ZakatEntryCard;
