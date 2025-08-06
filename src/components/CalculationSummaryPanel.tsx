@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronUp, ChevronDown, Plus, X, Info } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, X, Info, Check } from "lucide-react";
 
 interface ZakatEntry {
   id: number;
@@ -12,11 +12,13 @@ interface ZakatEntry {
 interface CalculationSummaryPanelProps {
   zakatEntries: ZakatEntry[];
   onAddCard?: () => void;
+  onDoneEditing?: () => void;
+  isEditing?: boolean;
   isSummaryExpanded?: boolean;
   onToggleSummary?: () => void;
 }
 
-const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = false, onToggleSummary }: CalculationSummaryPanelProps) => {
+const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEditing = false, isSummaryExpanded = false, onToggleSummary }: CalculationSummaryPanelProps) => {
   const [totalAssets, setTotalAssets] = useState(0);
   const [totalLiabilities, setTotalLiabilities] = useState(0);
   const [netZakatableAssets, setNetZakatableAssets] = useState(0);
@@ -210,13 +212,17 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, isSummaryExpanded = 
               </button>
             </div>
             
-            {/* Integrated FAB - Right Side */}
+            {/* Smart FAB - Right Side */}
             <button 
-              onClick={onAddCard} 
-              aria-label="Add new calculation" 
+              onClick={isEditing ? onDoneEditing : onAddCard} 
+              aria-label={isEditing ? "Done editing" : "Add new calculation"} 
               className="h-12 w-12 bg-primary text-primary-foreground rounded-xl shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 ease-out flex items-center justify-center group"
             >
-              <Plus size={20} strokeWidth={2.5} className="group-active:rotate-90 transition-transform duration-200" />
+              {isEditing ? (
+                <Check size={20} strokeWidth={2.5} className="transition-transform duration-200" />
+              ) : (
+                <Plus size={20} strokeWidth={2.5} className="group-active:rotate-90 transition-transform duration-200" />
+              )}
             </button>
           </div>
         </div>

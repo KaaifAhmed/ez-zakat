@@ -10,25 +10,15 @@ interface ZakatEntry {
   notes: string;
 }
 const ZakatCalculator = () => {
-  const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([]);
+  const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([
+    { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand' }
+  ]);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [editingCardId, setEditingCardId] = useState<number | null>(null);
 
   const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory'];
 
   const handleAddCard = () => {
-    // If no cards exist, add the pre-filled example card
-    if (zakatEntries.length === 0) {
-      const exampleCard: ZakatEntry = {
-        id: Date.now(),
-        type: 'Asset',
-        category: 'Cash',
-        amount: '250000',
-        notes: 'Cash in hand'
-      };
-      setZakatEntries([exampleCard]);
-      return;
-    }
-
     // Get the last card's category to determine the next one
     const lastEntry = zakatEntries[zakatEntries.length - 1];
     const lastCategoryIndex = categorySequence.indexOf(lastEntry.category);
@@ -43,6 +33,11 @@ const ZakatCalculator = () => {
       notes: ''
     };
     setZakatEntries(prev => [...prev, newEntry]);
+    setEditingCardId(newEntry.id);
+  };
+
+  const handleDoneEditing = () => {
+    setEditingCardId(null);
   };
   const handleDelete = (id: number) => {
     setZakatEntries(prev => prev.filter(entry => entry.id !== id));
@@ -96,12 +91,14 @@ const ZakatCalculator = () => {
       <main className="flex-1 p-6 pb-36 mb-10 relative z-10">
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-max">
-          {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in-up" data-card-id={entry.id}>
+            {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in-up" data-card-id={entry.id}>
               <ZakatEntryCard 
                 entry={entry}
+                isEditing={editingCardId === entry.id}
                 onDelete={() => handleDelete(entry.id)} 
-                onEdit={() => {/* TODO: Add edit functionality */}}
+                onEdit={() => setEditingCardId(entry.id)}
                 onUpdateEntry={handleUpdateEntry}
+                onDoneEditing={handleDoneEditing}
               />
             </div>)}
         </div>
@@ -111,6 +108,8 @@ const ZakatCalculator = () => {
       <CalculationSummaryPanel 
         zakatEntries={zakatEntries} 
         onAddCard={handleAddCard}
+        onDoneEditing={handleDoneEditing}
+        isEditing={editingCardId !== null}
         isSummaryExpanded={isSummaryExpanded}
         onToggleSummary={() => setIsSummaryExpanded(!isSummaryExpanded)}
       />

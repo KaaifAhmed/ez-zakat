@@ -17,17 +17,21 @@ interface ZakatEntry {
 }
 interface ZakatEntryCardProps {
   entry: ZakatEntry;
+  isEditing?: boolean;
   onDelete?: () => void;
   onEdit?: () => void;
   onUpdateEntry?: (id: number, field: keyof ZakatEntry, value: any) => void;
+  onDoneEditing?: () => void;
 }
 const ZakatEntryCard = ({
   entry,
+  isEditing = false,
   onDelete,
   onEdit,
-  onUpdateEntry
+  onUpdateEntry,
+  onDoneEditing
 }: ZakatEntryCardProps) => {
-  const [isEditing, setIsEditing] = useState<boolean>(entry.amount === '' || entry.amount === 0); // New cards start in edit mode
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [entryType, setEntryType] = useState<EntryType>(entry.type);
   const [category, setCategory] = useState<string>(entry.category);
   const [amount, setAmount] = useState<string>(entry.amount.toString());
@@ -116,6 +120,25 @@ const ZakatEntryCard = ({
     setNotes(newNotes);
     onUpdateEntry?.(entry.id, 'notes', newNotes);
   };
+
+  const handleNotesKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onDoneEditing?.();
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (showDeleteConfirm) {
+      onDelete?.();
+    } else {
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+  };
   const formatAmount = (amount: number) => {
     return `PKR ${amount.toLocaleString('en-US')}`;
   };
@@ -158,14 +181,28 @@ const ZakatEntryCard = ({
         </div>
         
         {/* Action Icons */}
-        <div className="flex justify-end gap-2 mt-4 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
-          <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150">
-            <Edit3 size={16} />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150">
-            <Trash2 size={16} />
-          </Button>
-        </div>
+        {!showDeleteConfirm ? (
+          <div className="flex justify-end gap-2 mt-4 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+            <Button variant="ghost" size="icon" onClick={onEdit} className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150">
+              <Edit3 size={16} />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleDeleteClick} className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150">
+              <Trash2 size={16} />
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-4 p-3 bg-destructive/5 rounded-lg border border-destructive/20">
+            <p className="text-sm text-foreground mb-3">Are you sure you want to delete?</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={handleCancelDelete} className="text-sm">
+                Cancel
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleDeleteClick} className="text-sm">
+                Delete
+              </Button>
+            </div>
+          </div>
+        )}
       </div>;
   }
 
@@ -244,23 +281,32 @@ const ZakatEntryCard = ({
         <Label htmlFor="notes" className="text-sm font-medium text-foreground mb-3 block">
           Notes (optional)
         </Label>
-        <Textarea id="notes" value={notes} onChange={e => handleNotesChange(e.target.value)} placeholder="Add any additional notes..." className="bg-background min-h-[80px] resize-none" />
+        <Textarea id="notes" value={notes} onChange={e => handleNotesChange(e.target.value)} onKeyDown={handleNotesKeyDown} placeholder="Add any additional notes..." className="bg-background min-h-[80px] resize-none" />
       </div>
 
       {/* Action Icons */}
-      <div className="flex justify-between items-center">
-        <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} className="text-sm">
-          Done Editing
-        </Button>
-        <div className="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
+      {!showDeleteConfirm ? (
+        <div className="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
           <Button variant="ghost" size="icon" onClick={onEdit} className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150">
             <Edit3 size={16} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150">
+          <Button variant="ghost" size="icon" onClick={handleDeleteClick} className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 transition-all duration-150">
             <Trash2 size={16} />
           </Button>
         </div>
-      </div>
+      ) : (
+        <div className="p-3 bg-destructive/5 rounded-lg border border-destructive/20">
+          <p className="text-sm text-foreground mb-3">Are you sure you want to delete?</p>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={handleCancelDelete} className="text-sm">
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDeleteClick} className="text-sm">
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
     </div>;
 };
 export default ZakatEntryCard;
