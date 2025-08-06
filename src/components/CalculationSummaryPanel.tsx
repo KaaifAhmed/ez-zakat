@@ -5,8 +5,11 @@ interface ZakatEntry {
   id: number;
   type: 'Asset' | 'Liability';
   category: string;
-  amount: number | string;
+  amount?: number | string; // Only for non-Gold/Silver assets
   notes: string;
+  karat?: string;
+  weight?: number; // For Gold/Silver
+  unit?: 'gram' | 'tola'; // For Gold/Silver
 }
 
 interface CalculationSummaryPanelProps {
@@ -25,20 +28,43 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
   const [zakatDue, setZakatDue] = useState(0);
   const [animatedZakatDue, setAnimatedZakatDue] = useState(0);
   
-  const nisabThreshold = 275000; // PKR
   const GOLD_RATE_PER_GRAM = 28200;
   const SILVER_RATE_PER_GRAM = 350;
+  const NISAB_SILVER_GRAMS = 612.36;
+  const TOLA_TO_GRAM = 11.664;
+  
+  // Dynamic Nisab calculation based on silver rate
+  const nisabThreshold = NISAB_SILVER_GRAMS * SILVER_RATE_PER_GRAM;
+
+  // Helper function to calculate asset value
+  const calculateAssetValue = (entry: ZakatEntry): number => {
+    if (entry.category === 'Gold' || entry.category === 'Silver') {
+      if (!entry.weight || !entry.karat) return 0;
+      
+      const rates = entry.category === 'Gold' ? 
+        { "24K": GOLD_RATE_PER_GRAM, "22K": GOLD_RATE_PER_GRAM * 0.916, "21K": GOLD_RATE_PER_GRAM * 0.875, "18K": GOLD_RATE_PER_GRAM * 0.75 } :
+        { "24K": SILVER_RATE_PER_GRAM, "22K": SILVER_RATE_PER_GRAM * 0.916, "21K": SILVER_RATE_PER_GRAM * 0.875 };
+      
+      const rate = rates[entry.karat as keyof typeof rates];
+      if (!rate) return 0;
+      
+      const weightInGrams = entry.unit === 'tola' ? entry.weight * TOLA_TO_GRAM : entry.weight;
+      return weightInGrams * rate;
+    }
+    
+    return typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount || 0;
+  };
 
   useEffect(() => {
-    // Calculate total assets - for gold/silver, use entered amount directly (already calculated with karat rates)
+    // Calculate total assets
     const assets = zakatEntries
       .filter(entry => entry.type === 'Asset')
-      .reduce((sum, entry) => sum + (typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount), 0);
+      .reduce((sum, entry) => sum + calculateAssetValue(entry), 0);
     
     // Calculate total liabilities
     const liabilities = zakatEntries
       .filter(entry => entry.type === 'Liability')
-      .reduce((sum, entry) => sum + (typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount), 0);
+      .reduce((sum, entry) => sum + calculateAssetValue(entry), 0);
     
     // Calculate net zakatable assets
     const netAssets = assets - liabilities;
@@ -50,7 +76,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
     setTotalLiabilities(liabilities);
     setNetZakatableAssets(netAssets);
     setZakatDue(zakat);
-  }, [zakatEntries, nisabThreshold, GOLD_RATE_PER_GRAM, SILVER_RATE_PER_GRAM]);
+  }, [zakatEntries, nisabThreshold]);
 
   // Count-up animation for Zakat Due
   useEffect(() => {
@@ -154,7 +180,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
               >
                 <div className="flex flex-col">
                   <span className="text-muted-foreground">Nisab Threshold</span>
-                  <span className="text-xs text-muted-foreground">Based on 87.48g of silver</span>
+                  <span className="text-xs text-muted-foreground">Based on {NISAB_SILVER_GRAMS}g of silver</span>
                 </div>
                 <span className="font-semibold text-foreground">{formatCurrency(nisabThreshold)}</span>
               </div>

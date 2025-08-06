@@ -6,8 +6,11 @@ interface ZakatEntry {
   id: number;
   type: 'Asset' | 'Liability';
   category: string;
-  amount: number | string;
+  amount?: number | string; // Only for non-Gold/Silver assets
   notes: string;
+  karat?: string;
+  weight?: number; // For Gold/Silver
+  unit?: 'gram' | 'tola'; // For Gold/Silver
 }
 const ZakatCalculator = () => {
   const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([
@@ -19,6 +22,20 @@ const ZakatCalculator = () => {
   const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory'];
 
   const handleAddCard = () => {
+    if (zakatEntries.length === 0) {
+      // Add the detailed example card when starting from empty
+      const newEntry: ZakatEntry = {
+        id: Date.now(),
+        type: 'Asset',
+        category: 'Cash',
+        amount: '250000',
+        notes: 'Cash in hand'
+      };
+      setZakatEntries([newEntry]);
+      setEditingCardId(newEntry.id);
+      return;
+    }
+
     // Get the last card's category to determine the next one
     const lastEntry = zakatEntries[zakatEntries.length - 1];
     const lastCategoryIndex = categorySequence.indexOf(lastEntry.category);
@@ -29,8 +46,11 @@ const ZakatCalculator = () => {
       id: Date.now(),
       type: 'Asset',
       category: nextCategory,
-      amount: '',
-      notes: ''
+      amount: nextCategory === 'Gold' || nextCategory === 'Silver' ? undefined : '',
+      notes: '',
+      weight: nextCategory === 'Gold' || nextCategory === 'Silver' ? 0 : undefined,
+      unit: nextCategory === 'Gold' || nextCategory === 'Silver' ? 'gram' : undefined,
+      karat: nextCategory === 'Gold' || nextCategory === 'Silver' ? '' : undefined
     };
     setZakatEntries(prev => [...prev, newEntry]);
     setEditingCardId(newEntry.id);
