@@ -11,10 +11,11 @@ interface ZakatEntry {
   karat?: string;
   weight?: number; // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
+  currency?: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'; // For Cash
 }
 const ZakatCalculator = () => {
   const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([
-    { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand' }
+    { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
   ]);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
@@ -29,7 +30,8 @@ const ZakatCalculator = () => {
         type: 'Asset',
         category: 'Cash',
         amount: '250000',
-        notes: 'Cash in hand'
+        notes: 'Cash in hand',
+        currency: 'PKR'
       };
       setZakatEntries([newEntry]);
       setEditingCardId(newEntry.id);
@@ -54,7 +56,8 @@ const ZakatCalculator = () => {
       notes: '',
       weight: isGoldOrSilver ? 0 : undefined,
       unit: isGoldOrSilver ? 'gram' : undefined,
-      karat: isGoldOrSilver ? '' : undefined
+      karat: isGoldOrSilver ? '' : undefined,
+      currency: nextCategory === 'Cash' ? 'PKR' : undefined
     };
     setZakatEntries(prev => [...prev, newEntry]);
     setEditingCardId(newEntry.id);

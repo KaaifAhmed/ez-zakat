@@ -15,6 +15,7 @@ interface ZakatEntry {
   karat?: string;
   weight?: number; // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
+  currency?: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'; // For Cash
 }
 interface ZakatEntryCardProps {
   entry: ZakatEntry;
@@ -44,6 +45,7 @@ const ZakatEntryCard = ({
   const [karat, setKarat] = useState<string>(entry.karat || "");
   const [weight, setWeight] = useState<string>(entry.weight?.toString() || "");
   const [unit, setUnit] = useState<'gram' | 'tola'>(entry.unit || 'gram');
+  const [currency, setCurrency] = useState<'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'>(entry.currency || 'PKR');
   const amountInputRef = useRef<HTMLInputElement>(null);
   const assetCategories = ["Cash", "Gold", "Silver", "Business Inventory", "Receivables"];
   const liabilityCategories = ["Personal Debt", "Business Loan", "Other Payables"];
@@ -86,6 +88,7 @@ const ZakatEntryCard = ({
     onUpdateEntry?.(entry.id, 'weight', 0);
     onUpdateEntry?.(entry.id, 'amount', 0);
     onUpdateEntry?.(entry.id, 'unit', 'gram');
+    onUpdateEntry?.(entry.id, 'currency', undefined);
   };
   const handleCategoryChange = (newCategory: string) => {
     setCategory(newCategory);
@@ -93,6 +96,12 @@ const ZakatEntryCard = ({
     setWeight("");
     setAmount("0");
     setUnit('gram');
+    if (newCategory === 'Cash') {
+      setCurrency('PKR');
+      onUpdateEntry?.(entry.id, 'currency', 'PKR');
+    } else {
+      onUpdateEntry?.(entry.id, 'currency', undefined);
+    }
     onUpdateEntry?.(entry.id, 'category', newCategory);
     onUpdateEntry?.(entry.id, 'karat', "");
     onUpdateEntry?.(entry.id, 'weight', 0);
@@ -157,6 +166,10 @@ const ZakatEntryCard = ({
     onUpdateEntry?.(entry.id, 'unit', newUnit);
   };
 
+  const handleCurrencyChange = (newCurrency: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED') => {
+    setCurrency(newCurrency);
+    onUpdateEntry?.(entry.id, 'currency', newCurrency);
+  };
   // Calculate display value for Gold/Silver
   const getGoldSilverDisplayValue = () => {
     if (!isGoldOrSilver || !weight || !karat) return 0;
@@ -288,6 +301,28 @@ const ZakatEntryCard = ({
         </Select>
       </div>
 
+      {/* Currency for Cash */}
+      {category === 'Cash' && (
+        <div className="mb-5">
+          <Label htmlFor="currency" className="text-sm font-medium text-foreground mb-3 block">
+            Currency
+          </Label>
+          <Select value={currency} onValueChange={(v) => handleCurrencyChange(v as any)}>
+            <SelectTrigger id="currency" className="bg-background">
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border border-border shadow-md z-50">
+              <SelectItem value="PKR" className="hover:bg-accent hover:text-accent-foreground">PKR (Pakistani Rupee)</SelectItem>
+              <SelectItem value="USD" className="hover:bg-accent hover:text-accent-foreground">USD (US Dollar)</SelectItem>
+              <SelectItem value="EUR" className="hover:bg-accent hover:text-accent-foreground">EUR (Euro)</SelectItem>
+              <SelectItem value="GBP" className="hover:bg-accent hover:text-accent-foreground">GBP (British Pound)</SelectItem>
+              <SelectItem value="SAR" className="hover:bg-accent hover:text-accent-foreground">SAR (Saudi Riyal)</SelectItem>
+              <SelectItem value="AED" className="hover:bg-accent hover:text-accent-foreground">AED (UAE Dirham)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* Karat Selection for Gold/Silver */}
       {isGoldOrSilver && <div className="mb-5">
           <Label htmlFor="karat" className="text-sm font-medium text-foreground mb-3 block">
@@ -321,7 +356,7 @@ const ZakatEntryCard = ({
       {/* Weight Input for Gold/Silver or Amount Input for others */}
       <div className="mb-5">
         <Label htmlFor={isGoldOrSilver ? "weight" : "amount"} className="text-sm font-medium text-foreground mb-3 block">
-          {isGoldOrSilver ? `Weight (${unit === 'tola' ? 'tola' : 'grams'})` : "Amount (PKR)"}
+          {isGoldOrSilver ? `Weight (${unit === 'tola' ? 'tola' : 'grams'})` : `Amount (${category === 'Cash' ? currency : 'PKR'})`}
         </Label>
         {isGoldOrSilver ? <Input id="weight" type="number" value={weight} onChange={e => handleWeightChange(e.target.value)} placeholder={`Enter weight in ${unit === 'tola' ? 'tola' : 'grams'}`} className="bg-background" disabled={!karat} /> : <Input id="amount" type="text" ref={amountInputRef} value={displayAmount} onChange={handleAmountInputChange} placeholder="Enter amount" className="bg-background" />}
       </div>

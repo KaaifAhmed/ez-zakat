@@ -10,6 +10,7 @@ interface ZakatEntry {
   karat?: string;
   weight?: number; // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
+  currency?: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'; // For Cash
 }
 
 interface CalculationSummaryPanelProps {
@@ -32,6 +33,14 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
   const SILVER_RATE_PER_GRAM = 350;
   const NISAB_SILVER_GRAMS = 612.36;
   const TOLA_TO_GRAM = 11.664;
+  const CURRENCY_RATES = {
+    PKR: 1,
+    USD: 285,
+    EUR: 310,
+    GBP: 360,
+    SAR: 75,
+    AED: 78,
+  } as const;
   
   // Dynamic Nisab calculation based on silver rate
   const nisabThreshold = NISAB_SILVER_GRAMS * SILVER_RATE_PER_GRAM;
@@ -51,7 +60,11 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
       const weightInGrams = entry.unit === 'tola' ? entry.weight * TOLA_TO_GRAM : entry.weight;
       return weightInGrams * rate;
     }
-    
+    if (entry.category === 'Cash') {
+      const baseAmount = typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount || 0;
+      const rate = CURRENCY_RATES[(entry.currency || 'PKR') as keyof typeof CURRENCY_RATES] || 1;
+      return baseAmount * rate;
+    }
     return typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount || 0;
   };
 
