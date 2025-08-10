@@ -200,8 +200,11 @@ const ZakatEntryCard = ({
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false);
   };
-  const formatAmount = (amount: number) => {
+  const formatAmountPKR = (amount: number) => {
     return `PKR ${amount.toLocaleString('en-US')}`;
+  };
+  const formatAmountWithCurrency = (code: string, amount: number) => {
+    return `${code} ${amount.toLocaleString('en-US')}`;
   };
   if (!isEditing) {
     // View Mode - Display only
@@ -225,7 +228,12 @@ const ZakatEntryCard = ({
                 {isGoldOrSilver ? "Calculated Value:" : "Amount:"}
               </span>
               <p className="text-xl font-bold text-foreground">
-                {isGoldOrSilver ? formatAmount(getGoldSilverDisplayValue()) : formatAmount(parseFloat(amount) || 0)}
+                {isGoldOrSilver
+                  ? formatAmountPKR(getGoldSilverDisplayValue())
+                  : (category === 'Cash'
+                      ? formatAmountWithCurrency(currency, parseFloat(amount) || 0)
+                      : formatAmountPKR(parseFloat(amount) || 0)
+                    )}
               </p>
             </div>
             
@@ -367,7 +375,7 @@ const ZakatEntryCard = ({
             Calculated Value
           </Label>
           <div className="text-lg font-bold text-primary">
-            {formatAmount(getGoldSilverDisplayValue())}
+            {formatAmountPKR(getGoldSilverDisplayValue())}
           </div>
           <div className="text-sm text-muted-foreground">
             {weight} {unit === 'tola' ? 'tola' : 'g'} × PKR {(category === "Gold" ? goldKaratRates : silverKaratRates)[karat as keyof typeof goldKaratRates]?.toLocaleString()}/gram
