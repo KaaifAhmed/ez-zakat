@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Trash2, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +19,7 @@ interface ZakatEntry {
 interface ZakatEntryCardProps {
   entry: ZakatEntry;
   isEditing?: boolean;
+  editingCardId?: number | null;
   onDelete?: () => void;
   onEdit?: () => void;
   onUpdateEntry?: (id: number, field: keyof ZakatEntry, value: any) => void;
@@ -27,6 +28,7 @@ interface ZakatEntryCardProps {
 const ZakatEntryCard = ({
   entry,
   isEditing = false,
+  editingCardId = null,
   onDelete,
   onEdit,
   onUpdateEntry,
@@ -35,13 +37,14 @@ const ZakatEntryCard = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [entryType, setEntryType] = useState<EntryType>(entry.type);
   const [category, setCategory] = useState<string>(entry.category);
-  const [amount, setAmount] = useState<string>(entry.amount?.toString() || "");
-  const [displayAmount, setDisplayAmount] = useState<string>(entry.amount?.toString() || "");
-  const [isAmountFocused, setIsAmountFocused] = useState<boolean>(false);
+  const initialAmountDigits = (entry.amount?.toString().replace(/\D/g, '') || "");
+  const [amount, setAmount] = useState<string>(initialAmountDigits);
+  const [displayAmount, setDisplayAmount] = useState<string>(initialAmountDigits ? new Intl.NumberFormat().format(parseInt(initialAmountDigits, 10)) : "");
   const [notes, setNotes] = useState<string>(entry.notes);
   const [karat, setKarat] = useState<string>(entry.karat || "");
   const [weight, setWeight] = useState<string>(entry.weight?.toString() || "");
   const [unit, setUnit] = useState<'gram' | 'tola'>(entry.unit || 'gram');
+  const amountInputRef = useRef<HTMLInputElement>(null);
   const assetCategories = ["Cash", "Gold", "Silver", "Business Inventory", "Receivables"];
   const liabilityCategories = ["Personal Debt", "Business Loan", "Other Payables"];
   const goldKaratRates = {
@@ -96,22 +99,44 @@ const ZakatEntryCard = ({
     onUpdateEntry?.(entry.id, 'amount', 0);
     onUpdateEntry?.(entry.id, 'unit', 'gram');
   };
-  const handleAmountChange = (newAmount: string) => {
-    setAmount(newAmount);
-    setDisplayAmount(newAmount);
-    const numericAmount = parseFloat(newAmount) || 0;
+  const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputEl = amountInputRef.current;
+    const rawValue = e.target.value;
+    const caretPos = inputEl?.selectionStart ?? rawValue.length;
+
+    // Count digits before caret in current input
+    const digitsBeforeCaret = rawValue.slice(0, caretPos).replace(/\D/g, '').length;
+
+    // Clean to digits-only source of truth
+    const digits = rawValue.replace(/\D/g, '');
+    setAmount(digits);
+
+    // Format for display
+    const formatted = digits ? new Intl.NumberFormat().format(parseInt(digits, 10)) : "";
+    setDisplayAmount(formatted);
+
+    // Update parent with numeric value
+    const numericAmount = digits ? parseInt(digits, 10) : 0;
     onUpdateEntry?.(entry.id, 'amount', numericAmount);
-  };
-  const handleAmountFocus = () => {
-    setIsAmountFocused(true);
-    setDisplayAmount(amount);
-  };
-  const handleAmountBlur = () => {
-    setIsAmountFocused(false);
-    if (amount && !isNaN(parseFloat(amount))) {
-      const formatted = new Intl.NumberFormat().format(parseFloat(amount));
-      setDisplayAmount(formatted);
-    }
+
+    // Restore caret to appropriate position
+    requestAnimationFrame(() => {
+      if (!inputEl) return;
+      let digitCount = 0;
+      let newCaret = 0;
+      for (let i = 0; i < formatted.length; i++) {
+        if (/\d/.test(formatted[i])) {
+          digitCount++;
+        }
+        if (digitCount === digitsBeforeCaret) {
+          newCaret = i + 1;
+          break;
+        }
+      }
+      if (digitsBeforeCaret === 0) newCaret = 0;
+      if (digitsBeforeCaret >= (digits.length)) newCaret = formatted.length;
+      inputEl.setSelectionRange(newCaret, newCaret);
+    });
   };
   const handleWeightChange = (newWeight: string) => {
     setWeight(newWeight);
@@ -206,7 +231,7 @@ const ZakatEntryCard = ({
         </div>
         
         {/* Action Icons */}
-        {!showDeleteConfirm ? (
+        {entry.id !== editingCardId && (!showDeleteConfirm ? (
           <div className="flex justify-end gap-2 mt-4 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
             <Button variant="ghost" size="icon" onClick={onEdit} className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150">
               <Edit3 size={16} />
@@ -227,7 +252,7 @@ const ZakatEntryCard = ({
               </Button>
             </div>
           </div>
-        )}
+        ))}
       </div>;
   }
 
@@ -298,7 +323,7 @@ const ZakatEntryCard = ({
         <Label htmlFor={isGoldOrSilver ? "weight" : "amount"} className="text-sm font-medium text-foreground mb-3 block">
           {isGoldOrSilver ? `Weight (${unit === 'tola' ? 'tola' : 'grams'})` : "Amount (PKR)"}
         </Label>
-        {isGoldOrSilver ? <Input id="weight" type="number" value={weight} onChange={e => handleWeightChange(e.target.value)} placeholder={`Enter weight in ${unit === 'tola' ? 'tola' : 'grams'}`} className="bg-background" disabled={!karat} /> : <Input id="amount" type="text" value={isAmountFocused ? amount : displayAmount} onChange={e => handleAmountChange(e.target.value.replace(/,/g, ''))} onFocus={handleAmountFocus} onBlur={handleAmountBlur} placeholder="Enter amount" className="bg-background" />}
+        {isGoldOrSilver ? <Input id="weight" type="number" value={weight} onChange={e => handleWeightChange(e.target.value)} placeholder={`Enter weight in ${unit === 'tola' ? 'tola' : 'grams'}`} className="bg-background" disabled={!karat} /> : <Input id="amount" type="text" ref={amountInputRef} value={displayAmount} onChange={handleAmountInputChange} placeholder="Enter amount" className="bg-background" />}
       </div>
 
       {/* Calculated Amount Display for Gold/Silver */}
@@ -324,7 +349,7 @@ const ZakatEntryCard = ({
       </div>
 
       {/* Action Icons */}
-      {!showDeleteConfirm ? (
+      {entry.id !== editingCardId && (!showDeleteConfirm ? (
         <div className="flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-200">
           <Button variant="ghost" size="icon" onClick={onEdit} className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-105 transition-all duration-150">
             <Edit3 size={16} />
@@ -345,7 +370,7 @@ const ZakatEntryCard = ({
             </Button>
           </div>
         </div>
-      )}
+      ))}
     </div>;
 };
 export default ZakatEntryCard;

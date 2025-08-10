@@ -19,7 +19,7 @@ const ZakatCalculator = () => {
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
 
-  const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory'];
+  const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory', 'Receivables', 'Personal Debt', 'Business Loan', 'Other Payables'];
 
   const handleAddCard = () => {
     if (zakatEntries.length === 0) {
@@ -42,15 +42,19 @@ const ZakatCalculator = () => {
     const nextCategoryIndex = (lastCategoryIndex + 1) % categorySequence.length;
     const nextCategory = categorySequence[nextCategoryIndex];
 
+    const liabilityCategories = ['Personal Debt', 'Business Loan', 'Other Payables'];
+    const isGoldOrSilver = nextCategory === 'Gold' || nextCategory === 'Silver';
+    const isLiability = liabilityCategories.includes(nextCategory);
+
     const newEntry: ZakatEntry = {
       id: Date.now(),
-      type: 'Asset',
+      type: isLiability ? 'Liability' : 'Asset',
       category: nextCategory,
-      amount: nextCategory === 'Gold' || nextCategory === 'Silver' ? undefined : '',
+      amount: isGoldOrSilver ? undefined : '',
       notes: '',
-      weight: nextCategory === 'Gold' || nextCategory === 'Silver' ? 0 : undefined,
-      unit: nextCategory === 'Gold' || nextCategory === 'Silver' ? 'gram' : undefined,
-      karat: nextCategory === 'Gold' || nextCategory === 'Silver' ? '' : undefined
+      weight: isGoldOrSilver ? 0 : undefined,
+      unit: isGoldOrSilver ? 'gram' : undefined,
+      karat: isGoldOrSilver ? '' : undefined
     };
     setZakatEntries(prev => [...prev, newEntry]);
     setEditingCardId(newEntry.id);
@@ -115,6 +119,7 @@ const ZakatCalculator = () => {
               <ZakatEntryCard 
                 entry={entry}
                 isEditing={editingCardId === entry.id}
+                editingCardId={editingCardId}
                 onDelete={() => handleDelete(entry.id)} 
                 onEdit={() => setEditingCardId(entry.id)}
                 onUpdateEntry={handleUpdateEntry}
