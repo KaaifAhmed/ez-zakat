@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, Plus, X, Info, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ZakatEntry {
   id: number;
@@ -29,21 +30,68 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
   const [zakatDue, setZakatDue] = useState(0);
   const [animatedZakatDue, setAnimatedZakatDue] = useState(0);
   
-  const GOLD_RATE_PER_GRAM = 28200;
-  const SILVER_RATE_PER_GRAM = 350;
-  const NISAB_SILVER_GRAMS = 612.36;
-  const TOLA_TO_GRAM = 11.664;
-  const CURRENCY_RATES = {
+  // Exchange rates state
+  const [currencyRates, setCurrencyRates] = useState({
     PKR: 1,
     USD: 285,
     EUR: 310,
     GBP: 360,
     SAR: 75,
     AED: 78,
-  } as const;
+  });
+  const [ratesLoading, setRatesLoading] = useState(false);
+  
+  const GOLD_RATE_PER_GRAM = 28200;
+  const SILVER_RATE_PER_GRAM = 350;
+  const NISAB_SILVER_GRAMS = 612.36;
+  const TOLA_TO_GRAM = 11.664;
   
   // Dynamic Nisab calculation based on silver rate
   const nisabThreshold = NISAB_SILVER_GRAMS * SILVER_RATE_PER_GRAM;
+
+  // Fetch exchange rates from edge function
+  const fetchExchangeRates = async () => {
+    try {
+      setRatesLoading(true);
+      
+      // Check localStorage cache first (cache for 1 hour)
+      const cachedData = localStorage.getItem('exchange-rates-cache');
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        const isExpired = Date.now() - parsed.timestamp > 3600000; // 1 hour
+        
+        if (!isExpired) {
+          setCurrencyRates(parsed.rates);
+          setRatesLoading(false);
+          return;
+        }
+      }
+
+      const { data, error } = await supabase.functions.invoke('get-exchange-rates');
+      
+      if (error) throw error;
+
+      if (data && data.rates) {
+        setCurrencyRates(data.rates);
+        
+        // Cache the rates
+        localStorage.setItem('exchange-rates-cache', JSON.stringify({
+          rates: data.rates,
+          timestamp: Date.now()
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch exchange rates:', error);
+      // Keep fallback rates already set in state
+    } finally {
+      setRatesLoading(false);
+    }
+  };
+
+  // Fetch rates on component mount
+  useEffect(() => {
+    fetchExchangeRates();
+  }, []);
 
   // Helper function to calculate asset value
   const calculateAssetValue = (entry: ZakatEntry): number => {
@@ -62,7 +110,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
     }
     if (entry.category === 'Cash') {
       const baseAmount = typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount || 0;
-      const rate = CURRENCY_RATES[(entry.currency || 'PKR') as keyof typeof CURRENCY_RATES] || 1;
+      const rate = currencyRates[(entry.currency || 'PKR') as keyof typeof currencyRates] || 1;
       return baseAmount * rate;
     }
     return typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount || 0;
@@ -89,7 +137,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
     setTotalLiabilities(liabilities);
     setNetZakatableAssets(netAssets);
     setZakatDue(zakat);
-  }, [zakatEntries, nisabThreshold]);
+  }, [zakatEntries, nisabThreshold, currencyRates]);
 
   // Count-up animation for Zakat Due
   useEffect(() => {
