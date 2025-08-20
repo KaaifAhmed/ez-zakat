@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, Plus, X, Info, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ZakatEntry {
   id: number;
@@ -11,7 +10,7 @@ interface ZakatEntry {
   karat?: string;
   weight?: number; // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
-  currency?: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'; // For Cash
+  currency?: string; // For Cash
 }
 
 interface CalculationSummaryPanelProps {
@@ -21,25 +20,35 @@ interface CalculationSummaryPanelProps {
   isEditing?: boolean;
   isSummaryExpanded?: boolean;
   onToggleSummary?: () => void;
+  currencyRates?: Record<string, number>;
+  currencySymbols?: Record<string, string>;
 }
 
-const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEditing = false, isSummaryExpanded = false, onToggleSummary }: CalculationSummaryPanelProps) => {
+const CalculationSummaryPanel = ({ 
+  zakatEntries, 
+  onAddCard, 
+  onDoneEditing, 
+  isEditing = false, 
+  isSummaryExpanded = false, 
+  onToggleSummary, 
+  currencyRates: externalCurrencyRates,
+  currencySymbols: externalCurrencySymbols 
+}: CalculationSummaryPanelProps) => {
   const [totalAssets, setTotalAssets] = useState(0);
   const [totalLiabilities, setTotalLiabilities] = useState(0);
   const [netZakatableAssets, setNetZakatableAssets] = useState(0);
   const [zakatDue, setZakatDue] = useState(0);
   const [animatedZakatDue, setAnimatedZakatDue] = useState(0);
   
-  // Exchange rates state
-  const [currencyRates, setCurrencyRates] = useState({
+  // Use external rates if provided, otherwise use fallback
+  const finalCurrencyRates = externalCurrencyRates || {
     PKR: 1,
     USD: 285,
     EUR: 310,
     GBP: 360,
     SAR: 75,
     AED: 78,
-  });
-  const [ratesLoading, setRatesLoading] = useState(false);
+  };
   
   const GOLD_RATE_PER_GRAM = 28200;
   const SILVER_RATE_PER_GRAM = 350;
@@ -48,50 +57,6 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
   
   // Dynamic Nisab calculation based on silver rate
   const nisabThreshold = NISAB_SILVER_GRAMS * SILVER_RATE_PER_GRAM;
-
-  // Fetch exchange rates from edge function
-  const fetchExchangeRates = async () => {
-    try {
-      setRatesLoading(true);
-      
-      // Check localStorage cache first (cache for 1 hour)
-      const cachedData = localStorage.getItem('exchange-rates-cache');
-      if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        const isExpired = Date.now() - parsed.timestamp > 3600000; // 1 hour
-        
-        if (!isExpired) {
-          setCurrencyRates(parsed.rates);
-          setRatesLoading(false);
-          return;
-        }
-      }
-
-      const { data, error } = await supabase.functions.invoke('get-exchange-rates');
-      
-      if (error) throw error;
-
-      if (data && data.rates) {
-        setCurrencyRates(data.rates);
-        
-        // Cache the rates
-        localStorage.setItem('exchange-rates-cache', JSON.stringify({
-          rates: data.rates,
-          timestamp: Date.now()
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to fetch exchange rates:', error);
-      // Keep fallback rates already set in state
-    } finally {
-      setRatesLoading(false);
-    }
-  };
-
-  // Fetch rates on component mount
-  useEffect(() => {
-    fetchExchangeRates();
-  }, []);
 
   // Helper function to calculate asset value
   const calculateAssetValue = (entry: ZakatEntry): number => {
@@ -110,7 +75,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
     }
     if (entry.category === 'Cash') {
       const baseAmount = typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount || 0;
-      const rate = currencyRates[(entry.currency || 'PKR') as keyof typeof currencyRates] || 1;
+      const rate = finalCurrencyRates[(entry.currency || 'PKR') as keyof typeof finalCurrencyRates] || 1;
       return baseAmount * rate;
     }
     return typeof entry.amount === 'string' ? parseFloat(entry.amount) || 0 : entry.amount || 0;
@@ -137,7 +102,7 @@ const CalculationSummaryPanel = ({ zakatEntries, onAddCard, onDoneEditing, isEdi
     setTotalLiabilities(liabilities);
     setNetZakatableAssets(netAssets);
     setZakatDue(zakat);
-  }, [zakatEntries, nisabThreshold, currencyRates]);
+  }, [zakatEntries, nisabThreshold, finalCurrencyRates]);
 
   // Count-up animation for Zakat Due
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Calculator } from "lucide-react";
 import ZakatEntryCard from "@/components/ZakatEntryCard";
 import CalculationSummaryPanel from "@/components/CalculationSummaryPanel";
+import { useCurrencyData } from "@/hooks/useCurrencyData";
 interface ZakatEntry {
   id: number;
   type: 'Asset' | 'Liability';
@@ -11,9 +12,10 @@ interface ZakatEntry {
   karat?: string;
   weight?: number; // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
-  currency?: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'; // For Cash
+  currency?: string; // For Cash
 }
 const ZakatCalculator = () => {
+  const { currencyRates, currencySymbols, loading: currencyLoading } = useCurrencyData();
   const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([
     { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
   ]);
@@ -127,6 +129,7 @@ const ZakatCalculator = () => {
                 onEdit={() => setEditingCardId(entry.id)}
                 onUpdateEntry={handleUpdateEntry}
                 onDoneEditing={handleDoneEditing}
+                currencySymbols={currencySymbols}
               />
             </div>)}
         </div>
@@ -140,6 +143,8 @@ const ZakatCalculator = () => {
         isEditing={editingCardId !== null}
         isSummaryExpanded={isSummaryExpanded}
         onToggleSummary={() => setIsSummaryExpanded(!isSummaryExpanded)}
+        currencyRates={currencyRates}
+        currencySymbols={currencySymbols}
       />
     </div>;
 };

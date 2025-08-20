@@ -18,35 +18,49 @@ serve(async (req) => {
       throw new Error('FOREX_RATE_API_KEY is not set');
     }
 
-    console.log('Fetching exchange rates from ForexRateAPI...');
+    console.log('Fetching currency symbols and exchange rates from ForexRateAPI...');
 
-    // Fetch exchange rates with PKR as base currency
-    const response = await fetch(`https://api.forexrateapi.com/v1/latest?api_key=${FOREX_API_KEY}&base=PKR&currencies=USD,EUR,GBP,SAR,AED`);
+    // Fetch all supported currency symbols
+    const symbolsResponse = await fetch(`https://api.forexrateapi.com/v1/symbols?api_key=${FOREX_API_KEY}`);
     
-    if (!response.ok) {
-      throw new Error(`ForexRateAPI error: ${response.status} ${response.statusText}`);
+    if (!symbolsResponse.ok) {
+      throw new Error(`ForexRateAPI symbols error: ${symbolsResponse.status} ${symbolsResponse.statusText}`);
     }
 
-    const data = await response.json();
-    console.log('Raw API response:', data);
+    const symbolsData = await symbolsResponse.json();
+    console.log('Currency symbols fetched:', Object.keys(symbolsData.symbols || {}).length, 'currencies');
 
-    if (!data.rates) {
-      throw new Error('Invalid response format from ForexRateAPI');
+    if (!symbolsData.symbols) {
+      throw new Error('Invalid symbols response format from ForexRateAPI');
+    }
+
+    // Fetch exchange rates for all currencies with PKR as base
+    const ratesResponse = await fetch(`https://api.forexrateapi.com/v1/latest?api_key=${FOREX_API_KEY}&base=PKR`);
+    
+    if (!ratesResponse.ok) {
+      throw new Error(`ForexRateAPI rates error: ${ratesResponse.status} ${ratesResponse.statusText}`);
+    }
+
+    const ratesData = await ratesResponse.json();
+    console.log('Raw rates response:', Object.keys(ratesData.rates || {}).length, 'rates fetched');
+
+    if (!ratesData.rates) {
+      throw new Error('Invalid rates response format from ForexRateAPI');
     }
 
     // Convert rates to PKR (since we're using PKR as base, we need to invert the rates)
-    const pkrRates = {
-      PKR: 1,
-      USD: Math.round(1 / data.rates.USD),
-      EUR: Math.round(1 / data.rates.EUR), 
-      GBP: Math.round(1 / data.rates.GBP),
-      SAR: Math.round(1 / data.rates.SAR),
-      AED: Math.round(1 / data.rates.AED),
-    };
+    const pkrRates: Record<string, number> = { PKR: 1 };
+    
+    Object.entries(ratesData.rates).forEach(([currency, rate]) => {
+      if (typeof rate === 'number' && rate > 0) {
+        pkrRates[currency] = Math.round(1 / rate);
+      }
+    });
 
-    console.log('Converted PKR rates:', pkrRates);
+    console.log('Converted PKR rates for', Object.keys(pkrRates).length, 'currencies');
 
     return new Response(JSON.stringify({
+      symbols: symbolsData.symbols,
       rates: pkrRates,
       timestamp: Date.now(),
       success: true
@@ -57,7 +71,20 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error fetching exchange rates:', error);
     
-    // Return fallback rates if API fails
+    // Return fallback data if API fails
+    const fallbackSymbols = {
+      'USD': 'United States Dollar',
+      'EUR': 'Euro',
+      'GBP': 'British Pound Sterling', 
+      'SAR': 'Saudi Riyal',
+      'AED': 'United Arab Emirates Dirham',
+      'CAD': 'Canadian Dollar',
+      'AUD': 'Australian Dollar',
+      'JPY': 'Japanese Yen',
+      'CHF': 'Swiss Franc',
+      'CNY': 'Chinese Yuan'
+    };
+    
     const fallbackRates = {
       PKR: 1,
       USD: 285,
@@ -65,9 +92,15 @@ serve(async (req) => {
       GBP: 360,
       SAR: 75,
       AED: 78,
+      CAD: 210,
+      AUD: 180,
+      JPY: 2,
+      CHF: 320,
+      CNY: 40,
     };
 
     return new Response(JSON.stringify({
+      symbols: fallbackSymbols,
       rates: fallbackRates,
       timestamp: Date.now(),
       success: false,

@@ -15,7 +15,7 @@ interface ZakatEntry {
   karat?: string;
   weight?: number; // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
-  currency?: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'; // For Cash
+  currency?: string; // For Cash
 }
 interface ZakatEntryCardProps {
   entry: ZakatEntry;
@@ -25,6 +25,7 @@ interface ZakatEntryCardProps {
   onEdit?: () => void;
   onUpdateEntry?: (id: number, field: keyof ZakatEntry, value: any) => void;
   onDoneEditing?: () => void;
+  currencySymbols?: Record<string, string>;
 }
 const ZakatEntryCard = ({
   entry,
@@ -33,7 +34,8 @@ const ZakatEntryCard = ({
   onDelete,
   onEdit,
   onUpdateEntry,
-  onDoneEditing
+  onDoneEditing,
+  currencySymbols = {}
 }: ZakatEntryCardProps) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [entryType, setEntryType] = useState<EntryType>(entry.type);
@@ -45,7 +47,7 @@ const ZakatEntryCard = ({
   const [karat, setKarat] = useState<string>(entry.karat || "");
   const [weight, setWeight] = useState<string>(entry.weight?.toString() || "");
   const [unit, setUnit] = useState<'gram' | 'tola'>(entry.unit || 'gram');
-  const [currency, setCurrency] = useState<'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED'>(entry.currency || 'PKR');
+  const [currency, setCurrency] = useState<string>(entry.currency || 'PKR');
   const amountInputRef = useRef<HTMLInputElement>(null);
   const assetCategories = ["Cash", "Gold", "Silver", "Business Inventory", "Receivables"];
   const liabilityCategories = ["Personal Debt", "Business Loan", "Other Payables"];
@@ -166,9 +168,22 @@ const ZakatEntryCard = ({
     onUpdateEntry?.(entry.id, 'unit', newUnit);
   };
 
-  const handleCurrencyChange = (newCurrency: 'PKR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED') => {
+  const handleCurrencyChange = (newCurrency: string) => {
     setCurrency(newCurrency);
     onUpdateEntry?.(entry.id, 'currency', newCurrency);
+  };
+  
+  // Create sorted currency options with PKR at the top
+  const getSortedCurrencies = () => {
+    const currencies = Object.keys(currencySymbols);
+    if (currencies.length === 0) {
+      // Fallback currencies if no data available
+      return ['PKR', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
+    }
+    
+    // Put PKR first, then sort the rest alphabetically
+    const withoutPKR = currencies.filter(code => code !== 'PKR').sort();
+    return currencies.includes('PKR') ? ['PKR', ...withoutPKR] : withoutPKR;
   };
   // Calculate display value for Gold/Silver
   const getGoldSilverDisplayValue = () => {
@@ -315,17 +330,20 @@ const ZakatEntryCard = ({
           <Label htmlFor="currency" className="text-sm font-medium text-foreground mb-3 block">
             Currency
           </Label>
-          <Select value={currency} onValueChange={(v) => handleCurrencyChange(v as any)}>
+          <Select value={currency} onValueChange={handleCurrencyChange}>
             <SelectTrigger id="currency" className="bg-background">
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
             <SelectContent className="bg-background border border-border shadow-md z-50">
-              <SelectItem value="PKR" className="hover:bg-accent hover:text-accent-foreground">PKR (Pakistani Rupee)</SelectItem>
-              <SelectItem value="USD" className="hover:bg-accent hover:text-accent-foreground">USD (US Dollar)</SelectItem>
-              <SelectItem value="EUR" className="hover:bg-accent hover:text-accent-foreground">EUR (Euro)</SelectItem>
-              <SelectItem value="GBP" className="hover:bg-accent hover:text-accent-foreground">GBP (British Pound)</SelectItem>
-              <SelectItem value="SAR" className="hover:bg-accent hover:text-accent-foreground">SAR (Saudi Riyal)</SelectItem>
-              <SelectItem value="AED" className="hover:bg-accent hover:text-accent-foreground">AED (UAE Dirham)</SelectItem>
+              {getSortedCurrencies().map(currencyCode => (
+                <SelectItem 
+                  key={currencyCode} 
+                  value={currencyCode} 
+                  className="hover:bg-accent hover:text-accent-foreground"
+                >
+                  {currencyCode} ({currencySymbols[currencyCode] || 'Unknown Currency'})
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
