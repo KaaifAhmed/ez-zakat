@@ -3,6 +3,7 @@ import { Plus, Calculator } from "lucide-react";
 import ZakatEntryCard from "@/components/ZakatEntryCard";
 import CalculationSummaryPanel from "@/components/CalculationSummaryPanel";
 import { useCurrencyData } from "@/hooks/useCurrencyData";
+
 interface ZakatEntry {
   id: number;
   type: 'Asset' | 'Liability';
@@ -14,6 +15,7 @@ interface ZakatEntry {
   unit?: 'gram' | 'tola'; // For Gold/Silver
   currency?: string; // For Cash
 }
+
 const ZakatCalculator = () => {
   const { currencyRates, currencySymbols, loading: currencyLoading } = useCurrencyData();
   const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([

@@ -9,6 +9,7 @@ interface ZakatEntry {
   notes: string;
   karat?: string;
   weight?: number; // For Gold/Silver
+  price?: number // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
   currency?: string; // For Cash
 }
@@ -49,24 +50,19 @@ const CalculationSummaryPanel = ({
     SAR: 75,
     AED: 78,
   };
-  
-  const GOLD_RATE_PER_GRAM = 28200;
-  const SILVER_RATE_PER_GRAM = 350;
-  const NISAB_SILVER_GRAMS = 612.36;
+
   const TOLA_TO_GRAM = 11.664;
-  
-  // Dynamic Nisab calculation based on silver rate
-  const nisabThreshold = NISAB_SILVER_GRAMS * SILVER_RATE_PER_GRAM;
+  const nisabThreshold = 179689;
 
   // Helper function to calculate asset value
   const calculateAssetValue = (entry: ZakatEntry): number => {
     if (entry.category === 'Gold' || entry.category === 'Silver') {
-      if (!entry.weight || !entry.karat) return 0;
+      if (!entry.weight || !entry.karat || !entry.price) return 0;
       
       const rates = entry.category === 'Gold' ? 
-        { "24K": GOLD_RATE_PER_GRAM, "22K": GOLD_RATE_PER_GRAM * 0.916, "21K": GOLD_RATE_PER_GRAM * 0.875, "18K": GOLD_RATE_PER_GRAM * 0.75 } :
-        { "24K": SILVER_RATE_PER_GRAM, "22K": SILVER_RATE_PER_GRAM * 0.916, "21K": SILVER_RATE_PER_GRAM * 0.875 };
-      
+        { "24K": entry.price, "22K": entry.price * 0.916, "21K": entry.price * 0.875, "18K": entry.price * 0.75 } :
+        { "24K": entry.price, "22K": entry.price * 0.916, "21K": entry.price * 0.875 };
+        
       const rate = rates[entry.karat as keyof typeof rates];
       if (!rate) return 0;
       
@@ -102,7 +98,7 @@ const CalculationSummaryPanel = ({
     setTotalLiabilities(liabilities);
     setNetZakatableAssets(netAssets);
     setZakatDue(zakat);
-  }, [zakatEntries, nisabThreshold, finalCurrencyRates]);
+  }, [zakatEntries, finalCurrencyRates]);
 
   // Count-up animation for Zakat Due
   useEffect(() => {
@@ -145,6 +141,7 @@ const CalculationSummaryPanel = ({
           {/* Bottom Sheet Panel */}
           <div 
             className="absolute bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out overflow-y-auto"
+            className="absolute bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out"
             style={{ 
               borderTopLeftRadius: '16px', 
               borderTopRightRadius: '16px',
@@ -157,10 +154,10 @@ const CalculationSummaryPanel = ({
               <h2 className="text-lg font-semibold text-foreground">Zakat Calculation Summary</h2>
               <button 
                 onClick={onToggleSummary}
-                className="p-2 hover:bg-accent rounded-lg transition-all duration-200 hover:scale-110 hover:rotate-90 group"
+                className="p-2 hover:bg-accent rounded-lg group"
                 aria-label="Close panel"
               >
-                <X size={20} className="text-muted-foreground group-hover:text-foreground transition-all duration-200" />
+                <X size={20} className="text-muted-foreground" />
               </button>
             </div>
 
@@ -205,8 +202,8 @@ const CalculationSummaryPanel = ({
                 style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}
               >
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Nisab Threshold</span>
-                  <span className="text-xs text-muted-foreground">Based on {NISAB_SILVER_GRAMS}g of silver</span>
+                  <span className="text-muted-foreground">Nisab Threshold Est.</span>
+                  <span className="text-xs text-muted-foreground">For 1446-47 AH</span>
                 </div>
                 <span className="font-semibold text-foreground">{formatCurrency(nisabThreshold)}</span>
               </div>
@@ -214,7 +211,7 @@ const CalculationSummaryPanel = ({
               {/* Final Zakat Due - Most Prominent */}
               <div 
                 className="bg-primary/5 rounded-lg p-4 mt-6 border border-primary/20 opacity-0 translate-y-4 animate-fade-in"
-                style={{ animationDelay: '375ms', animationFillMode: 'forwards' }}
+                style={{ animationDelay: '375ms', animationFillMode: 'forwards', marginBottom: '16px' }}
               >
                 <div className="flex justify-between items-center">
                   <span className="text-xl font-bold text-foreground">Zakat Due</span>

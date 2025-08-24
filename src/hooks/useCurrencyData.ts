@@ -35,7 +35,7 @@ export const useCurrencyData = () => {
       const cachedData = localStorage.getItem('exchange-rates-cache');
       if (cachedData) {
         const parsed = JSON.parse(cachedData);
-        const isExpired = Date.now() - parsed.timestamp > 3600000; // 1 hour
+        const isExpired = Date.now() - parsed.timestamp > 86400000; // 1 day
         
         if (!isExpired) {
           setCurrencyRates(parsed.rates);

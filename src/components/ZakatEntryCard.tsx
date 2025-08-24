@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { Trash2, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +15,7 @@ interface ZakatEntry {
   karat?: string;
   weight?: number; // For Gold/Silver
   unit?: 'gram' | 'tola'; // For Gold/Silver
+  price?: number; // For Gold/Silver
   currency?: string; // For Cash
 }
 interface ZakatEntryCardProps {
@@ -46,22 +47,33 @@ const ZakatEntryCard = ({
   const [notes, setNotes] = useState<string>(entry.notes);
   const [karat, setKarat] = useState<string>(entry.karat || "");
   const [weight, setWeight] = useState<string>(entry.weight?.toString() || "");
+  const [price, setPrice] = useState<string>(entry.price?.toString() || "");
   const [unit, setUnit] = useState<'gram' | 'tola'>(entry.unit || 'gram');
   const [currency, setCurrency] = useState<string>(entry.currency || 'PKR');
   const amountInputRef = useRef<HTMLInputElement>(null);
   const assetCategories = ["Cash", "Gold", "Silver", "Business Inventory", "Receivables"];
   const liabilityCategories = ["Personal Debt", "Business Loan", "Other Payables"];
-  const goldKaratRates = {
-    "24K": 30650,
-    "22K": 28100,
-    "21K": 26800,
-    "18K": 23000
+
+  const goldKaratRates = useMemo(() => {
+  if (category !== "Gold") return null;
+  const base = parseFloat(price) || 0;
+  return {
+    "24K": base,
+    "22K": base * 0.916,
+    "21K": base * 0.875,
+    "18K": base * 0.75,
   };
-  const silverKaratRates = {
-    "24K": 340,
-    "22K": 310,
-    "21K": 290
+}, [category, price]);
+
+const silverKaratRates = useMemo(() => {
+  if (category !== "Silver") return null;
+  const base = parseFloat(price) || 0;
+  return {
+    "24K": base,
+    "22K": base * 0.916,
+    "21K": base * 0.875,
   };
+}, [category, price]);
   
   const TOLA_TO_GRAM = 11.664;
   const currentCategories = entryType === "Asset" ? assetCategories : liabilityCategories;
@@ -74,7 +86,7 @@ const ZakatEntryCard = ({
       onUpdateEntry?.(entry.id, 'unit', unit);
       onUpdateEntry?.(entry.id, 'karat', karat);
     }
-  }, [weight, unit, karat, isGoldOrSilver, entry.id, onUpdateEntry]);
+  }, [weight, unit, karat, isGoldOrSilver, entry.id]);
 
   // Reset category when type changes
   const handleTypeChange = (newType: EntryType) => {
@@ -82,8 +94,9 @@ const ZakatEntryCard = ({
     setCategory("");
     setKarat("");
     setWeight("");
-    setAmount("0");
+    setAmount("");
     setUnit('gram');
+    setPrice("");
     onUpdateEntry?.(entry.id, 'type', newType);
     onUpdateEntry?.(entry.id, 'category', "");
     onUpdateEntry?.(entry.id, 'karat', "");
@@ -96,7 +109,8 @@ const ZakatEntryCard = ({
     setCategory(newCategory);
     setKarat("");
     setWeight("");
-    setAmount("0");
+    setAmount("");
+    setPrice("");
     setUnit('gram');
     if (newCategory === 'Cash') {
       setCurrency('PKR');
@@ -154,6 +168,11 @@ const ZakatEntryCard = ({
     const numericWeight = parseFloat(newWeight) || 0;
     onUpdateEntry?.(entry.id, 'weight', numericWeight);
   };
+  const handlePriceChange = (newPrice: string) => {
+    setPrice(newPrice);
+    const numericPrice = parseFloat(newPrice) || 0;
+    onUpdateEntry?.(entry.id, 'price', numericPrice);
+  }
   const handleKaratChange = (newKarat: string) => {
     setKarat(newKarat);
     onUpdateEntry?.(entry.id, 'karat', newKarat);
@@ -187,7 +206,7 @@ const ZakatEntryCard = ({
   };
   // Calculate display value for Gold/Silver
   const getGoldSilverDisplayValue = () => {
-    if (!isGoldOrSilver || !weight || !karat) return 0;
+    if (!isGoldOrSilver || !weight || !karat || !price) return 0;
     
     const rates = category === "Gold" ? goldKaratRates : silverKaratRates;
     const rate = rates[karat as keyof typeof rates];
@@ -349,6 +368,15 @@ const ZakatEntryCard = ({
         </div>
       )}
 
+      
+      {/* Price Input for Gold/Silver */}
+      {isGoldOrSilver && <div className="mb-5">
+        <Label htmlFor="price" className="text-sm font-medium text-foreground mb-3 block">
+          {isGoldOrSilver && `${category} price per gram (24K)`}
+        </Label>
+        <Input id="price" type="number" value={price} onChange={e => handlePriceChange(e.target.value)} placeholder={`Enter current price in grams`} className="bg-background"/>
+      </div>}
+
       {/* Karat Selection for Gold/Silver */}
       {isGoldOrSilver && <div className="mb-5">
           <Label htmlFor="karat" className="text-sm font-medium text-foreground mb-3 block">
@@ -388,7 +416,7 @@ const ZakatEntryCard = ({
       </div>
 
       {/* Calculated Amount Display for Gold/Silver */}
-      {isGoldOrSilver && karat && weight && <div className="mb-5 p-4 bg-muted/30 rounded-lg border border-border/20">
+      {isGoldOrSilver && karat && weight && price && <div className="mb-5 p-4 bg-muted/30 rounded-lg border border-border/20">
           <Label className="text-sm font-medium text-foreground mb-2 block">
             Calculated Value
           </Label>
