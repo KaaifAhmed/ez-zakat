@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, User as UserIcon } from "lucide-react";
+import { Calculator, LogIn, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ZakatEntryCard from "../components/ZakatEntryCard";
@@ -132,38 +132,43 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Zakat Calculator</h1>
-          
-          {/* Auth Section */}
-          <div className="flex items-center gap-3">
-            {user ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <UserIcon size={16} />
-                  <span>{user.email}</span>
-                </div>
+        <header className="w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mb-8">
+          <div className="flex items-center justify-between py-4 px-0">
+            {/* Left Side - Title and Subtitle */}
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                <Calculator className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex flex-col">
+                <h1 className="text-2xl font-semibold text-foreground">Zakat Calculator</h1>
+                <p className="text-sm text-muted-foreground">Track and fulfill your zakat easily</p>
+              </div>
+            </div>
+            
+            {/* Right Side - Auth Status */}
+            <div className="flex items-center">
+              {user ? (
+                <button 
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors cursor-pointer"
+                  onClick={handleSignOut}
+                  title={`Signed in as ${user.email}`}
+                >
+                  {user.email?.[0]?.toUpperCase() || 'U'}
+                </button>
+              ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleSignOut}
+                  onClick={() => navigate("/auth")}
+                  className="gap-2"
                 >
-                  <LogOut size={16} />
-                  Sign Out
+                  <LogIn size={16} />
+                  Sign In
                 </Button>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/auth")}
-              >
-                <LogIn size={16} />
-                Sign In
-              </Button>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        </header>
 
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 font-inter relative">
           {/* Main Content Area */}
