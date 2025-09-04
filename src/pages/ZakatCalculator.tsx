@@ -46,11 +46,105 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
     }
   };
 
-  const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([
-    { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
-  ]);
+  const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([]);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load initial data based on user status
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (user) {
+          // User is logged in - try to load from database first
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('zakat_entries')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (!error && profile?.zakat_entries) {
+            // Data found in database
+            setZakatEntries(profile.zakat_entries);
+            return;
+          }
+
+          // No data in database, check localStorage for migration
+          const localData = localStorage.getItem('zakatCalculatorData');
+          if (localData) {
+            try {
+              const parsedData = JSON.parse(localData);
+              setZakatEntries(parsedData);
+              return;
+            } catch (e) {
+              console.warn('Failed to parse localStorage data:', e);
+            }
+          }
+        } else {
+          // User is not logged in - check localStorage
+          const localData = localStorage.getItem('zakatCalculatorData');
+          if (localData) {
+            try {
+              const parsedData = JSON.parse(localData);
+              setZakatEntries(parsedData);
+              return;
+            } catch (e) {
+              console.warn('Failed to parse localStorage data:', e);
+            }
+          }
+        }
+
+        // No data found anywhere, set default
+        setZakatEntries([
+          { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
+        ]);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        // Fallback to default
+        setZakatEntries([
+          { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [user]);
+
+  // Auto-save changes based on user status
+  useEffect(() => {
+    if (!isLoading && zakatEntries.length > 0) {
+      const saveData = async () => {
+        try {
+          if (user) {
+            // User is logged in - save to database
+            const { error } = await supabase
+              .from('profiles')
+              .update({ zakat_entries: zakatEntries })
+              .eq('id', user.id);
+
+            if (!error) {
+              // Clear localStorage after successful database save
+              localStorage.removeItem('zakatCalculatorData');
+            } else {
+              console.error('Failed to save to database:', error);
+            }
+          } else {
+            // User is not logged in - save to localStorage
+            localStorage.setItem('zakatCalculatorData', JSON.stringify(zakatEntries));
+          }
+        } catch (error) {
+          console.error('Error saving data:', error);
+        }
+      };
+
+      const timeoutId = setTimeout(saveData, 1000); // Debounce saves
+      return () => clearTimeout(timeoutId);
+    }
+  }, [zakatEntries, user, isLoading]);
 
   const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory', 'Receivables', 'Personal Debt', 'Business Loan', 'Other Payables'];
 
