@@ -1,8 +1,18 @@
 import { useState, useEffect } from "react";
-import { Plus, Calculator } from "lucide-react";
-import ZakatEntryCard from "@/components/ZakatEntryCard";
-import CalculationSummaryPanel from "@/components/CalculationSummaryPanel";
-import { useCurrencyData } from "@/hooks/useCurrencyData";
+import { User, Session } from '@supabase/supabase-js';
+import { Button } from "@/components/ui/button";
+import { LogIn, LogOut, User as UserIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import ZakatEntryCard from "../components/ZakatEntryCard";
+import CalculationSummaryPanel from "../components/CalculationSummaryPanel";
+import { useCurrencyData } from "../hooks/useCurrencyData";
+
+interface ZakatCalculatorProps {
+  user: User | null;
+  session: Session | null;
+}
 
 interface ZakatEntry {
   id: number;
@@ -16,8 +26,26 @@ interface ZakatEntry {
   currency?: string; // For Cash
 }
 
-const ZakatCalculator = () => {
+const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const { currencyRates, currencySymbols, loading: currencyLoading } = useCurrencyData();
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been logged out of your account",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
+
   const [zakatEntries, setZakatEntries] = useState<ZakatEntry[]>([
     { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
   ]);
@@ -100,54 +128,77 @@ const ZakatCalculator = () => {
       }, 100);
     }
   }, [zakatEntries.length]);
-  return <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 font-inter relative">
-      {/* Top Header */}
-      <header className="bg-surface-elevated border-b border-border px-6 py-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Calculator className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">
-              Zakat Calculator
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Track and fulfill your zakat easily
-            </p>
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Zakat Calculator</h1>
+          
+          {/* Auth Section */}
+          <div className="flex items-center gap-3">
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <UserIcon size={16} />
+                  <span>{user.email}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={16} />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/auth")}
+              >
+                <LogIn size={16} />
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
-      </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 pb-36 mb-10 relative z-10">
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-max">
-            {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in-up" data-card-id={entry.id}>
-              <ZakatEntryCard 
-                entry={entry}
-                isEditing={editingCardId === entry.id}
-                editingCardId={editingCardId}
-                onDelete={() => handleDelete(entry.id)} 
-                onEdit={() => setEditingCardId(entry.id)}
-                onUpdateEntry={handleUpdateEntry}
-                onDoneEditing={handleDoneEditing}
-                currencySymbols={currencySymbols}
-              />
-            </div>)}
+        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 font-inter relative">
+          {/* Main Content Area */}
+          <main className="flex-1 p-6 pb-36 mb-10 relative z-10">
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-max">
+                {zakatEntries.map(entry => <div key={entry.id} className="animate-fade-in-up" data-card-id={entry.id}>
+                  <ZakatEntryCard 
+                    entry={entry}
+                    isEditing={editingCardId === entry.id}
+                    editingCardId={editingCardId}
+                    onDelete={() => handleDelete(entry.id)} 
+                    onEdit={() => setEditingCardId(entry.id)}
+                    onUpdateEntry={handleUpdateEntry}
+                    onDoneEditing={handleDoneEditing}
+                    currencySymbols={currencySymbols}
+                  />
+                </div>)}
+            </div>
+          </main>
+
+          {/* Calculation Summary Panel with integrated FAB */}
+          <CalculationSummaryPanel 
+            zakatEntries={zakatEntries} 
+            onAddCard={handleAddCard}
+            onDoneEditing={handleDoneEditing}
+            isEditing={editingCardId !== null}
+            isSummaryExpanded={isSummaryExpanded}
+            onToggleSummary={() => setIsSummaryExpanded(!isSummaryExpanded)}
+            currencyRates={currencyRates}
+            currencySymbols={currencySymbols}
+          />
         </div>
-      </main>
-
-      {/* Calculation Summary Panel with integrated FAB */}
-      <CalculationSummaryPanel 
-        zakatEntries={zakatEntries} 
-        onAddCard={handleAddCard}
-        onDoneEditing={handleDoneEditing}
-        isEditing={editingCardId !== null}
-        isSummaryExpanded={isSummaryExpanded}
-        onToggleSummary={() => setIsSummaryExpanded(!isSummaryExpanded)}
-        currencyRates={currencyRates}
-        currencySymbols={currencySymbols}
-      />
-    </div>;
+      </div>
+    </div>
+  );
 };
 export default ZakatCalculator;

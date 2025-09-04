@@ -141,7 +141,6 @@ const CalculationSummaryPanel = ({
           {/* Bottom Sheet Panel */}
           <div 
             className="absolute bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out overflow-y-auto"
-            className="absolute bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-2xl transform transition-transform duration-300 ease-out"
             style={{ 
               borderTopLeftRadius: '16px', 
               borderTopRightRadius: '16px',
