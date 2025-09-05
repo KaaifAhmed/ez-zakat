@@ -56,8 +56,10 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
+        console.log('Loading initial data...', { userExists: !!user });
         
         if (user) {
+          console.log('User logged in, checking database...');
           // User is logged in - try to load from database first
           const { data: profile, error } = await supabase
             .from('profiles')
@@ -65,22 +67,30 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
             .eq('id', user.id)
             .maybeSingle();
 
+          console.log('Database query result:', { profile, error });
+
           if (!error && profile?.zakat_entries) {
             // Data found in database
             const entries = Array.isArray(profile.zakat_entries) ? profile.zakat_entries as unknown as ZakatEntry[] : [];
+            console.log('Entries from database:', entries);
             if (entries.length > 0) {
               setZakatEntries(entries);
+              console.log('Set entries from database');
               return;
             }
           }
 
           // No data in database, check localStorage for migration
+          console.log('No database data, checking localStorage...');
           const localData = localStorage.getItem('zakatCalculatorData');
+          console.log('localStorage data:', localData);
           if (localData) {
             try {
               const parsedData = JSON.parse(localData);
+              console.log('Parsed localStorage data:', parsedData);
               if (Array.isArray(parsedData) && parsedData.length > 0) {
                 setZakatEntries(parsedData);
+                console.log('Set entries from localStorage, migrating to database...');
                 // Migrate to database
                 await supabase
                   .from('profiles')
@@ -93,13 +103,17 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
             }
           }
         } else {
+          console.log('User not logged in, checking localStorage...');
           // User is not logged in - check localStorage
           const localData = localStorage.getItem('zakatCalculatorData');
+          console.log('localStorage data for guest:', localData);
           if (localData) {
             try {
               const parsedData = JSON.parse(localData);
+              console.log('Parsed localStorage data for guest:', parsedData);
               if (Array.isArray(parsedData) && parsedData.length > 0) {
                 setZakatEntries(parsedData);
+                console.log('Set entries from localStorage for guest');
                 return;
               }
             } catch (e) {
@@ -109,11 +123,14 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
         }
 
         // No data found, set default
+        console.log('No data found, setting default entries');
         const defaultEntries: ZakatEntry[] = [
           { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
         ];
         setZakatEntries(defaultEntries);
-        localStorage.setItem('zakatCalculatorData', JSON.stringify(defaultEntries));
+        if (!user) {
+          localStorage.setItem('zakatCalculatorData', JSON.stringify(defaultEntries));
+        }
       } catch (error) {
         console.error('Error loading initial data:', error);
         // Fallback to default
