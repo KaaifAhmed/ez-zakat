@@ -242,10 +242,10 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
     }
   }, [zakatEntries.length]);
   return (
-     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 font-inter relative">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <header className="w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mb-8">
+        <header className="w-full border-b border-border/60 backdrop-blur mb-8 px-6 py-2 bg-white shadow-sm sticky z-50 top-0 left-0 ">
           <div className="flex items-center justify-between py-4 px-0">
             {/* Left Side - Title and Subtitle */}
             <div className="flex items-start gap-3">
@@ -253,7 +253,7 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
                 <Calculator className="w-5 h-5 text-primary" />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-2xl font-semibold text-foreground">Zakat Calculator</h1>
+                <h1 className="text-xl font-semibold text-foreground">Zakat Calculator</h1>
                 <p className="text-sm text-muted-foreground">Track and fulfill your zakat easily</p>
               </div>
             </div>
