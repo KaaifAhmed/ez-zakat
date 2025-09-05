@@ -51,100 +51,62 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load initial data based on user status
+  // Load initial data from localStorage
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadInitialData = () => {
       try {
         setIsLoading(true);
         
-        if (user) {
-          // User is logged in - try to load from database first
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('zakat_entries')
-            .eq('id', user.id)
-            .maybeSingle();
-
-          if (!error && profile?.zakat_entries) {
-            // Data found in database
-            setZakatEntries(profile.zakat_entries);
-            return;
-          }
-
-          // No data in database, check localStorage for migration
-          const localData = localStorage.getItem('zakatCalculatorData');
-          if (localData) {
-            try {
-              const parsedData = JSON.parse(localData);
+        // Check localStorage for existing data
+        const localData = localStorage.getItem('zakatCalculatorData');
+        if (localData) {
+          try {
+            const parsedData = JSON.parse(localData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
               setZakatEntries(parsedData);
               return;
-            } catch (e) {
-              console.warn('Failed to parse localStorage data:', e);
             }
-          }
-        } else {
-          // User is not logged in - check localStorage
-          const localData = localStorage.getItem('zakatCalculatorData');
-          if (localData) {
-            try {
-              const parsedData = JSON.parse(localData);
-              setZakatEntries(parsedData);
-              return;
-            } catch (e) {
-              console.warn('Failed to parse localStorage data:', e);
-            }
+          } catch (e) {
+            console.warn('Failed to parse localStorage data:', e);
           }
         }
 
-        // No data found anywhere, set default
-        setZakatEntries([
+        // No data found, set default
+        const defaultEntries: ZakatEntry[] = [
           { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
-        ]);
+        ];
+        setZakatEntries(defaultEntries);
+        localStorage.setItem('zakatCalculatorData', JSON.stringify(defaultEntries));
       } catch (error) {
         console.error('Error loading initial data:', error);
         // Fallback to default
-        setZakatEntries([
+        const defaultEntries: ZakatEntry[] = [
           { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
-        ]);
+        ];
+        setZakatEntries(defaultEntries);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadInitialData();
-  }, [user]);
+  }, []);
 
-  // Auto-save changes based on user status
+  // Auto-save to localStorage whenever entries change
   useEffect(() => {
     if (!isLoading && zakatEntries.length > 0) {
-      const saveData = async () => {
+      const saveData = () => {
         try {
-          if (user) {
-            // User is logged in - save to database
-            const { error } = await supabase
-              .from('profiles')
-              .update({ zakat_entries: zakatEntries })
-              .eq('id', user.id);
-
-            if (!error) {
-              // Clear localStorage after successful database save
-              localStorage.removeItem('zakatCalculatorData');
-            } else {
-              console.error('Failed to save to database:', error);
-            }
-          } else {
-            // User is not logged in - save to localStorage
-            localStorage.setItem('zakatCalculatorData', JSON.stringify(zakatEntries));
-          }
+          localStorage.setItem('zakatCalculatorData', JSON.stringify(zakatEntries));
         } catch (error) {
-          console.error('Error saving data:', error);
+          console.error('Error saving data to localStorage:', error);
         }
       };
 
-      const timeoutId = setTimeout(saveData, 1000); // Debounce saves
+      const timeoutId = setTimeout(saveData, 500); // Debounce saves
       return () => clearTimeout(timeoutId);
     }
-  }, [zakatEntries, user, isLoading]);
+  }, [zakatEntries, isLoading]);
 
   const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory', 'Receivables', 'Personal Debt', 'Business Loan', 'Other Payables'];
 
