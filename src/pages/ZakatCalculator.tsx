@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Session } from '@supabase/supabase-js';
 import { Button } from "@/components/ui/button";
@@ -50,70 +50,46 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isInitialRender = useRef(true);
 
-  // Load initial data from localStorage and database (for logged users)
+  // Load initial data with robust logic
   useEffect(() => {
     const loadInitialData = async () => {
+      console.log("Loading initial data...");
+      setIsLoading(true);
+      
       try {
-        setIsLoading(true);
-        console.log('Loading initial data...', { userExists: !!user });
-        
-        if (user) {
-          console.log('User logged in, checking database...');
-          // User is logged in - try to load from database first
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user;
+
+        // --- LOGGED-IN USER LOGIC ---
+        if (currentUser) {
+          console.log("User logged in, checking database...");
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('zakat_entries')
-            .eq('id', user.id)
+            .eq('id', currentUser.id)
             .maybeSingle();
 
-          console.log('Database query result:', { profile, error });
+          if (error) console.error("Database fetch error:", error);
 
-          if (!error && profile?.zakat_entries) {
-            // Data found in database
-            const entries = Array.isArray(profile.zakat_entries) ? profile.zakat_entries as unknown as ZakatEntry[] : [];
-            console.log('Entries from database:', entries);
-            if (entries.length > 0) {
-              setZakatEntries(entries);
-              console.log('Set entries from database');
-              return;
-            }
+          // If database has entries, use them. This is the highest priority.
+          if (profile && profile.zakat_entries && Array.isArray(profile.zakat_entries) && profile.zakat_entries.length > 0) {
+            console.log("Data found in database. Loading cards.", profile.zakat_entries);
+            setZakatEntries(profile.zakat_entries as unknown as ZakatEntry[]);
+            setIsLoading(false);
+            return;
           }
 
-          // No data in database, check localStorage for migration
-          console.log('No database data, checking localStorage...');
+          // If DB is empty, check localStorage (for guest-to-login transition)
           const localData = localStorage.getItem('zakatCalculatorData');
-          console.log('localStorage data:', localData);
           if (localData) {
             try {
               const parsedData = JSON.parse(localData);
-              console.log('Parsed localStorage data:', parsedData);
               if (Array.isArray(parsedData) && parsedData.length > 0) {
+                console.log("No DB data, but found localStorage data. Loading and syncing to DB.");
                 setZakatEntries(parsedData);
-                console.log('Set entries from localStorage, migrating to database...');
-                // Migrate to database
-                await supabase
-                  .from('profiles')
-                  .update({ zakat_entries: parsedData as any })
-                  .eq('id', user.id);
-                return;
-              }
-            } catch (e) {
-              console.warn('Failed to parse localStorage data:', e);
-            }
-          }
-        } else {
-          console.log('User not logged in, checking localStorage...');
-          // User is not logged in - check localStorage
-          const localData = localStorage.getItem('zakatCalculatorData');
-          console.log('localStorage data for guest:', localData);
-          if (localData) {
-            try {
-              const parsedData = JSON.parse(localData);
-              console.log('Parsed localStorage data for guest:', parsedData);
-              if (Array.isArray(parsedData) && parsedData.length > 0) {
-                setZakatEntries(parsedData);
-                console.log('Set entries from localStorage for guest');
+                setIsLoading(false);
                 return;
               }
             } catch (e) {
@@ -122,15 +98,28 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
           }
         }
 
-        // No data found, set default
-        console.log('No data found, setting default entries');
+        // --- GUEST USER LOGIC (or logged-in user with no data anywhere) ---
+        const localData = localStorage.getItem('zakatCalculatorData');
+        if (localData) {
+          try {
+            const parsedData = JSON.parse(localData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              console.log("Guest with data in localStorage. Loading cards.");
+              setZakatEntries(parsedData);
+              setIsLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.warn('Failed to parse localStorage data:', e);
+          }
+        }
+
+        // No data found anywhere. Setting default card.
+        console.log("No data found anywhere. Setting default card.");
         const defaultEntries: ZakatEntry[] = [
           { id: 1, type: 'Asset', category: 'Cash', amount: '250000', notes: 'Cash in hand', currency: 'PKR' }
         ];
         setZakatEntries(defaultEntries);
-        if (!user) {
-          localStorage.setItem('zakatCalculatorData', JSON.stringify(defaultEntries));
-        }
       } catch (error) {
         console.error('Error loading initial data:', error);
         // Fallback to default
@@ -144,43 +133,59 @@ const ZakatCalculator = ({ user, session }: ZakatCalculatorProps) => {
     };
 
     loadInitialData();
-  }, [user]);
+  }, []);
 
-  // Auto-save to localStorage and database (for logged users)
+  // Save data with robust logic whenever entries change
   useEffect(() => {
-    if (!isLoading && zakatEntries.length > 0) {
-      const saveData = async () => {
-        try {
-          if (user) {
-            // User is logged in - save to database
-            const { error } = await supabase
-              .from('profiles')
-              .update({ zakat_entries: zakatEntries as any })
-              .eq('id', user.id);
+    const saveData = async () => {
+      // Prevent saving the initial default card on the very first render
+      if (isInitialRender.current) {
+        isInitialRender.current = false;
+        return;
+      }
 
-            if (!error) {
-              // Clear localStorage after successful database save
-              localStorage.removeItem('zakatCalculatorData');
-            } else {
-              console.error('Failed to save to database:', error);
-              // Fallback to localStorage
-              localStorage.setItem('zakatCalculatorData', JSON.stringify(zakatEntries));
-            }
-          } else {
-            // User is not logged in - save to localStorage
+      if (isLoading || zakatEntries.length === 0) {
+        return;
+      }
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user;
+
+        // --- LOGGED-IN USER LOGIC ---
+        if (currentUser) {
+          console.log("User logged in. Saving to database...");
+          const { error } = await supabase
+            .from('profiles')
+            .update({ zakat_entries: zakatEntries as any })
+            .eq('id', currentUser.id);
+
+          if (error) {
+            console.error("Error saving to database:", error);
+            // Fallback to localStorage
             localStorage.setItem('zakatCalculatorData', JSON.stringify(zakatEntries));
+          } else {
+            console.log("Successfully saved to database.");
+            // Clean up local storage after successful DB save
+            localStorage.removeItem('zakatCalculatorData');
           }
-        } catch (error) {
-          console.error('Error saving data:', error);
-          // Always fallback to localStorage
+        }
+        // --- GUEST USER LOGIC ---
+        else {
+          console.log("Guest user. Saving to localStorage...");
           localStorage.setItem('zakatCalculatorData', JSON.stringify(zakatEntries));
         }
-      };
+      } catch (error) {
+        console.error('Error saving data:', error);
+        // Always fallback to localStorage on error
+        localStorage.setItem('zakatCalculatorData', JSON.stringify(zakatEntries));
+      }
+    };
 
-      const timeoutId = setTimeout(saveData, 500); // Debounce saves
-      return () => clearTimeout(timeoutId);
-    }
-  }, [zakatEntries, user, isLoading]);
+    // Debounce saves
+    const timeoutId = setTimeout(saveData, 500);
+    return () => clearTimeout(timeoutId);
+  }, [zakatEntries, isLoading]);
 
   const categorySequence = ['Cash', 'Gold', 'Silver', 'Business Inventory', 'Receivables', 'Personal Debt', 'Business Loan', 'Other Payables'];
 
