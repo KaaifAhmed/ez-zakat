@@ -1,37 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { CurrencyData } from '@/types/zakat';
+import { DEFAULT_CURRENCY_RATES, DEFAULT_CURRENCY_SYMBOLS } from '@/constants/zakat';
 
-interface CurrencyData {
-  rates: Record<string, number>;
-  symbols: Record<string, string>;
-}
-
-export const useCurrencyData = () => {
-  const [currencyRates, setCurrencyRates] = useState<Record<string, number>>({
-    PKR: 1,
-    USD: 285,
-    EUR: 310,
-    GBP: 360,
-    SAR: 75,
-    AED: 78,
-  });
-  
-  const [currencySymbols, setCurrencySymbols] = useState<Record<string, string>>({
-    'PKR': 'Pakistani Rupee',
-    'USD': 'United States Dollar',
-    'EUR': 'Euro',
-    'GBP': 'British Pound Sterling',
-    'SAR': 'Saudi Riyal',
-    'AED': 'United Arab Emirates Dirham',
-  });
-  
+export const useCurrencyRates = () => {
+  const [currencyRates, setCurrencyRates] = useState<Record<string, number>>(DEFAULT_CURRENCY_RATES);
+  const [currencySymbols, setCurrencySymbols] = useState<Record<string, string>>(DEFAULT_CURRENCY_SYMBOLS);
   const [loading, setLoading] = useState(false);
 
   const fetchCurrencyData = async () => {
     try {
       setLoading(true);
       
-      // Check localStorage cache first (cache for 1 hour)
+      // Check localStorage cache first (cache for 1 day)
       const cachedData = localStorage.getItem('exchange-rates-cache');
       if (cachedData) {
         const parsed = JSON.parse(cachedData);

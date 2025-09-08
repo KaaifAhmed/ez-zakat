@@ -1,18 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, Plus, X, Info, Check } from "lucide-react";
-
-interface ZakatEntry {
-  id: number;
-  type: 'Asset' | 'Liability';
-  category: string;
-  amount?: number | string; // Only for non-Gold/Silver assets
-  notes: string;
-  karat?: string;
-  weight?: number; // For Gold/Silver
-  price?: number // For Gold/Silver
-  unit?: 'gram' | 'tola'; // For Gold/Silver
-  currency?: string; // For Cash
-}
+import { ZakatEntry } from "@/types/zakat";
 
 interface CalculationSummaryPanelProps {
   zakatEntries: ZakatEntry[];

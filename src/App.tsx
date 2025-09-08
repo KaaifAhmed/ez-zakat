@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
-import ZakatCalculator from "./pages/ZakatCalculator";
+import ZakatCalculatorPage from "./pages/ZakatCalculatorPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -54,7 +54,7 @@ const App = () => {
           <Routes>
             <Route 
               path="/" 
-              element={<ZakatCalculator user={user} session={session} />} 
+              element={<ZakatCalculatorPage user={user} session={session} />} 
             />
             <Route 
               path="/auth" 

@@ -5,19 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-type EntryType = "Asset" | "Liability";
-interface ZakatEntry {
-  id: number;
-  type: 'Asset' | 'Liability';
-  category: string;
-  amount?: number | string; // Only for non-Gold/Silver assets
-  notes: string;
-  karat?: string;
-  weight?: number; // For Gold/Silver
-  unit?: 'gram' | 'tola'; // For Gold/Silver
-  price?: number; // For Gold/Silver
-  currency?: string; // For Cash
-}
+import { ZakatEntry, EntryType } from "@/types/zakat";
+import { ASSET_CATEGORIES, LIABILITY_CATEGORIES, GOLD_KARAT_RATES, SILVER_KARAT_RATES, TOLA_TO_GRAM } from '@/constants/zakat';
 interface ZakatEntryCardProps {
   entry: ZakatEntry;
   isEditing?: boolean;
@@ -51,31 +40,25 @@ const ZakatEntryCard = ({
   const [unit, setUnit] = useState<'gram' | 'tola'>(entry.unit || 'gram');
   const [currency, setCurrency] = useState<string>(entry.currency || 'PKR');
   const amountInputRef = useRef<HTMLInputElement>(null);
-  const assetCategories = ["Cash", "Gold", "Silver", "Business Inventory", "Receivables"];
-  const liabilityCategories = ["Personal Debt", "Business Loan", "Other Payables"];
+  const assetCategories = ASSET_CATEGORIES;
+  const liabilityCategories = LIABILITY_CATEGORIES;
 
   const goldKaratRates = useMemo(() => {
   if (category !== "Gold") return null;
   const base = parseFloat(price) || 0;
-  return {
-    "24K": base,
-    "22K": base * 0.916,
-    "21K": base * 0.875,
-    "18K": base * 0.75,
-  };
+  return Object.fromEntries(
+    Object.entries(GOLD_KARAT_RATES).map(([karat, multiplier]) => [karat, base * multiplier])
+  );
 }, [category, price]);
 
 const silverKaratRates = useMemo(() => {
   if (category !== "Silver") return null;
   const base = parseFloat(price) || 0;
-  return {
-    "24K": base,
-    "22K": base * 0.916,
-    "21K": base * 0.875,
-  };
+  return Object.fromEntries(
+    Object.entries(SILVER_KARAT_RATES).map(([karat, multiplier]) => [karat, base * multiplier])
+  );
 }, [category, price]);
   
-  const TOLA_TO_GRAM = 11.664;
   const currentCategories = entryType === "Asset" ? assetCategories : liabilityCategories;
   const isGoldOrSilver = category === "Gold" || category === "Silver";
 
