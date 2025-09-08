@@ -2,7 +2,7 @@
  * Zakat calculation constants and configuration
  */
 
-export const NISAB_THRESHOLD_PKR = 300000; // PKR amount for nisab threshold
+export const NISAB_THRESHOLD_PKR = 179689; // PKR amount for nisab threshold
 export const ZAKAT_RATE = 0.025; // 2.5% zakat rate
 export const TOLA_TO_GRAM = 11.664; // Conversion factor from tola to grams
 
