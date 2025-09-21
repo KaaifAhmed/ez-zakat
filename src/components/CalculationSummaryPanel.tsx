@@ -132,7 +132,8 @@ const CalculationSummaryPanel = ({
             style={{ 
               borderTopLeftRadius: '16px', 
               borderTopRightRadius: '16px',
-              maxHeight: '85vh'
+              maxHeight: '85vh',
+              zIndex: 99999999
             }}
             onClick={(e) => e.stopPropagation()}
           >
