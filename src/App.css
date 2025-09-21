@@ -5,6 +5,10 @@
   text-align: center;
 }
 
+#lovable-badge {
+  z-index: -1 !important;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
