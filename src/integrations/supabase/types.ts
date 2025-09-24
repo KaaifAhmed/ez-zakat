@@ -32,11 +32,39 @@ export type Database = {
         }
         Relationships: []
       }
+      disbursements: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          date_of_payment: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          date_of_payment: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          date_of_payment?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           email: string | null
           id: string
+          total_zakat_due: number | null
           updated_at: string
           zakat_entries: Json | null
         }
@@ -44,6 +72,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          total_zakat_due?: number | null
           updated_at?: string
           zakat_entries?: Json | null
         }
@@ -51,6 +80,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          total_zakat_due?: number | null
           updated_at?: string
           zakat_entries?: Json | null
         }
