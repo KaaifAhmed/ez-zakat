@@ -4,31 +4,28 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
-
 interface DashboardPageProps {
   user: User | null;
 }
-
-const DashboardPage = ({ user }: DashboardPageProps) => {
+const DashboardPage = ({
+  user
+}: DashboardPageProps) => {
   const navigate = useNavigate();
 
   // Placeholder data - will be replaced with real data later
   const totalDue = 52750;
   const amountPaid = 10000;
   const remainingBalance = totalDue - amountPaid;
-  const progressPercentage = (amountPaid / totalDue) * 100;
-
+  const progressPercentage = amountPaid / totalDue * 100;
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-PK', {
       style: 'currency',
       currency: 'PKR',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto">
         <Header user={user} />
         
@@ -101,27 +98,16 @@ const DashboardPage = ({ user }: DashboardPageProps) => {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <Progress 
-                    value={progressPercentage} 
-                    className="w-full h-3"
-                  />
+                  <Progress value={progressPercentage} className="w-full h-3" />
                 </CardContent>
               </Card>
 
               {/* Action Buttons */}
               <div className="flex flex-col md:flex-row gap-4">
-                <Button 
-                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                  size="lg"
-                >
+                <Button size="lg" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 p-2 ">
                   + Add Disbursement
                 </Button>
-                <Button 
-                  variant="outline"
-                  className="flex-1 border-border text-foreground hover:bg-accent hover:text-accent-foreground"
-                  size="lg"
-                  onClick={() => navigate('/')}
-                >
+                <Button variant="outline" size="lg" onClick={() => navigate('/')} className="flex-1 border-border text-foreground hover:bg-accent hover:text-accent-foreground p-2 ">
                   Edit Assets & Liabilities
                 </Button>
               </div>
@@ -129,8 +115,6 @@ const DashboardPage = ({ user }: DashboardPageProps) => {
           </main>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DashboardPage;
