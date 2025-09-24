@@ -1,6 +1,8 @@
 import { User } from '@supabase/supabase-js';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 
 interface DashboardPageProps {
@@ -10,30 +12,118 @@ interface DashboardPageProps {
 const DashboardPage = ({ user }: DashboardPageProps) => {
   const navigate = useNavigate();
 
+  // Placeholder data - will be replaced with real data later
+  const totalDue = 52750;
+  const amountPaid = 10000;
+  const remainingBalance = totalDue - amountPaid;
+  const progressPercentage = (amountPaid / totalDue) * 100;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-PK', {
+      style: 'currency',
+      currency: 'PKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto">
         <Header user={user} />
         
-        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 font-inter">
+        <div className="bg-background font-inter">
           <main className="flex-1 p-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center py-16">
-                <h1 className="text-3xl font-bold text-foreground mb-4">
+            <div className="max-w-4xl mx-auto space-y-8">
+              {/* Page Title */}
+              <div className="text-center">
+                <h1 className="text-3xl font-bold text-foreground mb-2">
                   Zakat Dashboard
                 </h1>
-                <p className="text-muted-foreground mb-8">
-                  Your Zakat calculations have been saved successfully.
+                <p className="text-muted-foreground">
+                  Track your Zakat obligations and payments
                 </p>
-                
-                <div className="space-y-4">
-                  <Button 
-                    onClick={() => navigate('/')}
-                    className="w-full max-w-sm mx-auto"
-                  >
-                    Return to Calculator
-                  </Button>
-                </div>
+              </div>
+
+              {/* Metric Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Total Due Card */}
+                <Card className="bg-surface-card border-border shadow-card">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total Zakat Due
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground">
+                      {formatCurrency(totalDue)}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Amount Paid Card */}
+                <Card className="bg-surface-card border-border shadow-card">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Amount Paid
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-foreground">
+                      {formatCurrency(amountPaid)}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Remaining Balance Card */}
+                <Card className="bg-surface-card border-border shadow-card">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Remaining Balance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-primary">
+                      {formatCurrency(remainingBalance)}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Progress Bar */}
+              <Card className="bg-surface-card border-border shadow-card">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-foreground">
+                    Payment Progress
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {progressPercentage.toFixed(1)}% of Zakat obligation completed
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Progress 
+                    value={progressPercentage} 
+                    className="w-full h-3"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <Button 
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  size="lg"
+                >
+                  + Add Disbursement
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1 border-border text-foreground hover:bg-accent hover:text-accent-foreground"
+                  size="lg"
+                  onClick={() => navigate('/')}
+                >
+                  Edit Assets & Liabilities
+                </Button>
               </div>
             </div>
           </main>
