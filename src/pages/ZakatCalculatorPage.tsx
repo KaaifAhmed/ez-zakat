@@ -3,6 +3,7 @@ import { ZakatProvider, useZakat } from '@/context/ZakatContext';
 import { Header } from '@/components/Header';
 import ZakatEntryCard from '@/components/ZakatEntryCard';
 import CalculationSummaryPanel from '@/components/CalculationSummaryPanel';
+import { Button } from '@/components/ui/button';
 
 interface ZakatCalculatorProps {
   user: User | null;
@@ -20,6 +21,7 @@ const ZakatCalculatorContent = ({ user }: { user: User | null }) => {
     handleDeleteEntry,
     handleUpdateEntry,
     handleDoneEditing,
+    handleSaveAndProceed,
     setEditingCardId,
     setIsSummaryExpanded,
   } = useZakat();
@@ -49,6 +51,18 @@ const ZakatCalculatorContent = ({ user }: { user: User | null }) => {
                 </div>
               ))}
             </div>
+
+            {/* Save & Proceed Button */}
+            {zakatEntries.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <Button 
+                  onClick={handleSaveAndProceed}
+                  className="w-full max-w-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg py-3 px-6 font-medium transition-colors"
+                >
+                  Save & Proceed to Dashboard
+                </Button>
+              </div>
+            )}
           </main>
 
           {/* Calculation Summary Panel with integrated FAB */}

@@ -8,6 +8,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
 import ZakatCalculatorPage from "./pages/ZakatCalculatorPage";
 import AuthPage from "./pages/AuthPage";
+import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,10 @@ const App = () => {
             <Route 
               path="/auth" 
               element={user ? <Navigate to="/" /> : <AuthPage />} 
+            />
+            <Route 
+              path="/dashboard" 
+              element={<DashboardPage user={user} />} 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

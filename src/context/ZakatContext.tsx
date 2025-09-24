@@ -1,5 +1,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { ZakatEntry } from '@/types/zakat';
 import { useZakatData } from '@/hooks/useZakatData';
 import { useCurrencyRates } from '@/hooks/useCurrencyData';
@@ -20,6 +22,7 @@ interface ZakatContextType {
   handleDeleteEntry: (id: number) => void;
   handleUpdateEntry: (id: number, field: keyof ZakatEntry, value: any) => void;
   handleDoneEditing: () => void;
+  handleSaveAndProceed: () => Promise<void>;
   setEditingCardId: (id: number | null) => void;
   setIsSummaryExpanded: (expanded: boolean) => void;
 }
@@ -35,6 +38,7 @@ interface ZakatProviderProps {
 export const ZakatProvider = ({ children, user, session }: ZakatProviderProps) => {
   const { zakatEntries, setZakatEntries, isLoading } = useZakatData({ user, session });
   const { currencyRates, currencySymbols, loading: currencyLoading } = useCurrencyRates();
+  const navigate = useNavigate();
   
   const [editingCardId, setEditingCardId] = useState<number | null>(null);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
@@ -98,6 +102,30 @@ export const ZakatProvider = ({ children, user, session }: ZakatProviderProps) =
     setEditingCardId(null);
   };
 
+  const handleSaveAndProceed = async () => {
+    try {
+      // Force save to Supabase for logged-in users
+      if (user && zakatEntries.length > 0) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ zakat_entries: zakatEntries as any })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error("Error saving to database:", error);
+          // Still navigate even if save fails, as data is saved in localStorage as fallback
+        }
+      }
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error in save and proceed:', error);
+      // Navigate anyway since auto-save is handling persistence
+      navigate('/dashboard');
+    }
+  };
+
   // Auto-focus and scroll to new cards
   useEffect(() => {
     if (zakatEntries.length > 1) {
@@ -132,6 +160,7 @@ export const ZakatProvider = ({ children, user, session }: ZakatProviderProps) =
     handleDeleteEntry,
     handleUpdateEntry,
     handleDoneEditing,
+    handleSaveAndProceed,
     setEditingCardId,
     setIsSummaryExpanded,
   };
