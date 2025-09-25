@@ -3,9 +3,14 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 interface DashboardPageProps {
   user: User | null;
 }
@@ -13,9 +18,17 @@ const DashboardPage = ({
   user
 }: DashboardPageProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [totalDue, setTotalDue] = useState(0);
   const [amountPaid, setAmountPaid] = useState(0);
+  const [disbursements, setDisbursements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    notes: ''
+  });
 
   const remainingBalance = totalDue - amountPaid;
   const progressPercentage = totalDue > 0 ? (amountPaid / totalDue) * 100 : 0;
@@ -42,9 +55,9 @@ const DashboardPage = ({
         }
 
         // Fetch all user's disbursements
-        const { data: disbursements, error: disbursementsError } = await supabase
+        const { data: disbursementsData, error: disbursementsError } = await supabase
           .from('disbursements')
-          .select('amount_paid')
+          .select('*')
           .eq('user_id', user.id);
 
         if (disbursementsError) {
@@ -54,10 +67,11 @@ const DashboardPage = ({
 
         // Calculate totals
         const totalZakatDue = profile?.total_zakat_due || 0;
-        const totalAmountPaid = disbursements?.reduce((sum, d) => sum + Number(d.amount_paid), 0) || 0;
+        const totalAmountPaid = disbursementsData?.reduce((sum, d) => sum + Number(d.amount_paid), 0) || 0;
 
         setTotalDue(totalZakatDue);
         setAmountPaid(totalAmountPaid);
+        setDisbursements(disbursementsData || []);
       } catch (error) {
         console.error('Error in fetchDashboardData:', error);
       } finally {
@@ -75,6 +89,64 @@ const DashboardPage = ({
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const handleSavePayment = async () => {
+    if (!user || !formData.amount) {
+      toast({
+        title: "Error",
+        description: "Please enter an amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: newDisbursement, error } = await supabase
+        .from('disbursements')
+        .insert({
+          user_id: user.id,
+          amount_paid: parseFloat(formData.amount),
+          date_of_payment: formData.date,
+          notes: formData.notes || null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving disbursement:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save payment. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update local state for real-time UI update
+      setDisbursements(prev => [...prev, newDisbursement]);
+      setAmountPaid(prev => prev + parseFloat(formData.amount));
+
+      // Reset form and close modal
+      setFormData({
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        notes: ''
+      });
+      setIsModalOpen(false);
+
+      toast({
+        title: "Success",
+        description: "Payment recorded successfully!",
+      });
+    } catch (error) {
+      console.error('Error in handleSavePayment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save payment. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -163,7 +235,11 @@ const DashboardPage = ({
 
               {/* Action Buttons */}
               <div className="flex flex-col md:flex-row gap-4">
-                <Button size="lg" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 p-2 ">
+                <Button 
+                  size="lg" 
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 p-2"
+                  onClick={() => setIsModalOpen(true)}
+                >
                   + Add Disbursement
                 </Button>
                 <Button variant="outline" size="lg" onClick={() => navigate('/')} className="flex-1 border-border text-foreground hover:bg-accent hover:text-accent-foreground p-2 ">
@@ -173,6 +249,63 @@ const DashboardPage = ({
             </div>
           </main>
         </div>
+
+        {/* Add Disbursement Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add Payment Record</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="amount">Amount Paid *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Enter amount"
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="date">Date of Payment</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  className="w-full"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Notes / Recipient (Optional)</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="e.g., Edhi Foundation, Local Mosque"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full min-h-[80px]"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSavePayment}
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  Save Payment
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>;
 };
