@@ -1,11 +1,12 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { ZakatEntry } from '@/types/zakat';
 import { useZakatData } from '@/hooks/useZakatData';
 import { useCurrencyRates } from '@/hooks/useCurrencyData';
 import { CATEGORY_SEQUENCE, LIABILITY_CATEGORIES } from '@/constants/zakat';
+import { calculateZakatSummary } from '@/utils/calculations';
 
 interface ZakatContextType {
   // State
@@ -104,25 +105,59 @@ export const ZakatProvider = ({ children, user, session }: ZakatProviderProps) =
 
   const handleSaveAndProceed = async () => {
     try {
-      // Force save to Supabase for logged-in users
-      if (user && zakatEntries.length > 0) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ zakat_entries: zakatEntries as any })
-          .eq('id', user.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Check if user is logged in
+      if (!session?.user) {
+        navigate('/auth');
+        return;
+      }
 
-        if (error) {
-          console.error("Error saving to database:", error);
-          // Still navigate even if save fails, as data is saved in localStorage as fallback
+      // Calculate final Zakat due amount
+      const { zakatDue } = calculateZakatSummary(zakatEntries, currencyRates);
+      
+      // Update user's profile with zakat_entries and total_zakat_due
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          zakat_entries: zakatEntries as any,
+          total_zakat_due: zakatDue 
+        })
+        .eq('id', session.user.id);
+
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
+        return;
+      }
+
+      // Check if user has any disbursements, if not add default one
+      const { data: existingDisbursements, error: fetchError } = await supabase
+        .from('disbursements')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .limit(1);
+
+      if (fetchError) {
+        console.error('Error checking disbursements:', fetchError);
+      } else if (!existingDisbursements || existingDisbursements.length === 0) {
+        // Add default disbursement
+        const { error: disbursementError } = await supabase
+          .from('disbursements')
+          .insert({
+            user_id: session.user.id,
+            amount_paid: 10000,
+            date_of_payment: new Date().toISOString().split('T')[0],
+            notes: 'Edhi Foundation'
+          });
+
+        if (disbursementError) {
+          console.error('Error creating default disbursement:', disbursementError);
         }
       }
-      
-      // Navigate to dashboard
+
       navigate('/dashboard');
     } catch (error) {
-      console.error('Error in save and proceed:', error);
-      // Navigate anyway since auto-save is handling persistence
-      navigate('/dashboard');
+      console.error('Error in handleSaveAndProceed:', error);
     }
   };
 

@@ -51,7 +51,7 @@ serve(async (req)=>{
     const ratesData = await ratesResponse.json();
     if (!ratesData.rates) throw new Error('Invalid rates response format');
     // Process rates (your existing logic)
-    const pkrRates = {
+    const pkrRates: Record<string, number> = {
       PKR: 1
     };
     Object.entries(ratesData.rates).forEach(([currency, rate])=>{
@@ -101,7 +101,7 @@ serve(async (req)=>{
       rates: fallbackRates,
       timestamp: Date.now(),
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       fallback: true
     }), {
       headers: {

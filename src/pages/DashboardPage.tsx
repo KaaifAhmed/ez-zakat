@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 interface DashboardPageProps {
   user: User | null;
 }
@@ -11,12 +13,61 @@ const DashboardPage = ({
   user
 }: DashboardPageProps) => {
   const navigate = useNavigate();
+  const [totalDue, setTotalDue] = useState(0);
+  const [amountPaid, setAmountPaid] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Placeholder data - will be replaced with real data later
-  const totalDue = 52750;
-  const amountPaid = 10000;
   const remainingBalance = totalDue - amountPaid;
-  const progressPercentage = amountPaid / totalDue * 100;
+  const progressPercentage = totalDue > 0 ? (amountPaid / totalDue) * 100 : 0;
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+
+        // Fetch user's profile data for total_zakat_due
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('total_zakat_due')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          return;
+        }
+
+        // Fetch all user's disbursements
+        const { data: disbursements, error: disbursementsError } = await supabase
+          .from('disbursements')
+          .select('amount_paid')
+          .eq('user_id', user.id);
+
+        if (disbursementsError) {
+          console.error('Error fetching disbursements:', disbursementsError);
+          return;
+        }
+
+        // Calculate totals
+        const totalZakatDue = profile?.total_zakat_due || 0;
+        const totalAmountPaid = disbursements?.reduce((sum, d) => sum + Number(d.amount_paid), 0) || 0;
+
+        setTotalDue(totalZakatDue);
+        setAmountPaid(totalAmountPaid);
+      } catch (error) {
+        console.error('Error in fetchDashboardData:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user, navigate]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-PK', {
       style: 'currency',
@@ -25,6 +76,14 @@ const DashboardPage = ({
       maximumFractionDigits: 0
     }).format(amount);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-foreground">Loading...</div>
+      </div>
+    );
+  }
   return <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto">
         <Header user={user} />
