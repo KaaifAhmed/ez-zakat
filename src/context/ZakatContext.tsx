@@ -145,7 +145,7 @@ export const ZakatProvider = ({ children, user, session }: ZakatProviderProps) =
           .from('disbursements')
           .insert({
             user_id: session.user.id,
-            amount_paid: 10000,
+            amount_paid: 0,
             date_of_payment: new Date().toISOString().split('T')[0],
             notes: 'Edhi Foundation'
           });
