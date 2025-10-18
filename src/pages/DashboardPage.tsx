@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Check } from 'lucide-react';
 interface DashboardPageProps {
   user: User | null;
 }
@@ -29,6 +30,7 @@ const DashboardPage = ({
     date: new Date().toISOString().split('T')[0],
     notes: ''
   });
+  const [amountError, setAmountError] = useState('');
 
   const remainingBalance = totalDue - amountPaid;
   const progressPercentage = totalDue > 0 ? (amountPaid / totalDue) * 100 : 0;
@@ -101,6 +103,13 @@ const DashboardPage = ({
       return;
     }
 
+    const enteredAmount = parseFloat(formData.amount);
+    if (enteredAmount > remainingBalance) {
+      setAmountError(`Amount cannot exceed remaining balance of ${formatCurrency(remainingBalance)}`);
+      return;
+    }
+    setAmountError('');
+
     try {
       const { data: newDisbursement, error } = await supabase
         .from('disbursements')
@@ -133,6 +142,7 @@ const DashboardPage = ({
         date: new Date().toISOString().split('T')[0],
         notes: ''
       });
+      setAmountError('');
       setIsModalOpen(false);
 
       toast({
@@ -204,10 +214,17 @@ const DashboardPage = ({
                 </Card>
 
                 {/* Remaining Balance Card */}
-                <Card className="bg-surface-card border-border shadow-card">
+                <Card className={`border-border shadow-card ${remainingBalance <= 0 ? 'bg-[#E8F5E9]' : 'bg-surface-card'}`}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Remaining Balance
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      {remainingBalance <= 0 ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Zakat Paid in Full
+                        </>
+                      ) : (
+                        'Remaining Balance'
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -239,6 +256,7 @@ const DashboardPage = ({
                   size="lg" 
                   className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 p-2"
                   onClick={() => setIsModalOpen(true)}
+                  disabled={remainingBalance <= 0}
                 >
                   + Add Disbursement
                 </Button>
@@ -264,9 +282,16 @@ const DashboardPage = ({
                   type="number"
                   placeholder="Enter amount"
                   value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, amount: e.target.value }));
+                    setAmountError('');
+                  }}
+                  max={remainingBalance}
                   className="w-full"
                 />
+                {amountError && (
+                  <p className="text-sm text-destructive">{amountError}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="date">Date of Payment</Label>
