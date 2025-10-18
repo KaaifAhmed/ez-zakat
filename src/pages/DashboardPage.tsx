@@ -169,6 +169,47 @@ const DashboardPage = ({
     }
   };
 
+  const handleDeleteDisbursement = async (disbursementId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('disbursements')
+        .delete()
+        .eq('id', disbursementId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting disbursement:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete payment. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update local state for real-time UI update
+      const deletedDisbursement = disbursements.find(d => d.id === disbursementId);
+      if (deletedDisbursement) {
+        setDisbursements(prev => prev.filter(d => d.id !== disbursementId));
+        setAmountPaid(prev => prev - Number(deletedDisbursement.amount_paid));
+      }
+
+      toast({
+        title: "Success",
+        description: "Payment record deleted successfully.",
+      });
+    } catch (error) {
+      console.error('Error in handleDeleteDisbursement:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete payment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -298,9 +339,11 @@ const DashboardPage = ({
                       .map((disbursement) => (
                         <DisbursementCard
                           key={disbursement.id}
+                          id={disbursement.id}
                           notes={disbursement.notes}
                           dateOfPayment={disbursement.date_of_payment}
                           amountPaid={Number(disbursement.amount_paid)}
+                          onDelete={handleDeleteDisbursement}
                         />
                       ))}
                   </div>
