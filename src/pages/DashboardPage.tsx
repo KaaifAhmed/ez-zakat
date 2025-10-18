@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Check } from 'lucide-react';
+import { DisbursementCard } from '@/components/DisbursementCard';
 interface DashboardPageProps {
   user: User | null;
 }
@@ -104,10 +105,19 @@ const DashboardPage = ({
     }
 
     const enteredAmount = parseFloat(formData.amount);
+    
+    // Validate minimum amount
+    if (enteredAmount <= 0) {
+      setAmountError('Amount must be greater than zero');
+      return;
+    }
+    
+    // Validate maximum amount
     if (enteredAmount > remainingBalance) {
       setAmountError(`Amount cannot exceed remaining balance of ${formatCurrency(remainingBalance)}`);
       return;
     }
+    
     setAmountError('');
 
     try {
@@ -264,6 +274,38 @@ const DashboardPage = ({
                   Edit Assets & Liabilities
                 </Button>
               </div>
+
+              {/* Disbursement History Section */}
+              <div className="space-y-4 mt-8">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  Disbursement History
+                </h2>
+                
+                {disbursements.length === 0 ? (
+                  /* Empty State */
+                  <Card className="bg-surface-card border-border shadow-card">
+                    <CardContent className="p-8 text-center">
+                      <p className="text-muted-foreground text-base">
+                        You haven't logged any payments yet. Click the '+ Add Disbursement' button to get started!
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  /* Disbursement List */
+                  <div className="space-y-3">
+                    {[...disbursements]
+                      .sort((a, b) => new Date(b.date_of_payment).getTime() - new Date(a.date_of_payment).getTime())
+                      .map((disbursement) => (
+                        <DisbursementCard
+                          key={disbursement.id}
+                          notes={disbursement.notes}
+                          dateOfPayment={disbursement.date_of_payment}
+                          amountPaid={Number(disbursement.amount_paid)}
+                        />
+                      ))}
+                  </div>
+                )}
+              </div>
             </div>
           </main>
         </div>
@@ -286,7 +328,8 @@ const DashboardPage = ({
                     setFormData(prev => ({ ...prev, amount: e.target.value }));
                     setAmountError('');
                   }}
-                  max={remainingBalance}
+                  min="0"
+                  step="0.01"
                   className="w-full"
                 />
                 {amountError && (
