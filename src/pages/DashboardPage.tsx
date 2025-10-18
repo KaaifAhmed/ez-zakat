@@ -33,7 +33,7 @@ const DashboardPage = ({
   });
   const [amountError, setAmountError] = useState('');
 
-  const remainingBalance = totalDue - amountPaid;
+  const remainingBalance = parseFloat((totalDue - amountPaid).toFixed(2));
   const progressPercentage = totalDue > 0 ? (amountPaid / totalDue) * 100 : 0;
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -104,7 +104,7 @@ const DashboardPage = ({
       return;
     }
 
-    const enteredAmount = parseFloat(formData.amount);
+    const enteredAmount = parseFloat(parseFloat(formData.amount).toFixed(2));
     
     // Validate minimum amount
     if (enteredAmount <= 0) {
@@ -329,6 +329,7 @@ const DashboardPage = ({
                     setAmountError('');
                   }}
                   min="0"
+                  max={remainingBalance}
                   step="0.01"
                   className="w-full"
                 />
