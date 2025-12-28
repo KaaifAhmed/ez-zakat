@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
+import LandingPage from "./pages/LandingPage";
 import ZakatCalculatorPage from "./pages/ZakatCalculatorPage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -53,17 +54,21 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route 
-              path="/" 
-              element={<ZakatCalculatorPage user={user} session={session} />} 
+            <Route
+              path="/"
+              element={user ? <Navigate to="/dashboard" /> : <LandingPage />}
             />
-            <Route 
-              path="/auth" 
-              element={user ? <Navigate to="/" /> : <AuthPage />} 
+            <Route
+              path="/calculator"
+              element={<ZakatCalculatorPage user={user} session={session} />}
             />
-            <Route 
-              path="/dashboard" 
-              element={<DashboardPage user={user} />} 
+            <Route
+              path="/auth"
+              element={user ? <Navigate to="/dashboard" /> : <AuthPage />}
+            />
+            <Route
+              path="/dashboard"
+              element={<DashboardPage user={user} />}
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
