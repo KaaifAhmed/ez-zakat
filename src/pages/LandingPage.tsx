@@ -312,7 +312,6 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-6">Product</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="/calculator" className="hover:text-primary transition-colors">Calculator</a></li>
                 <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
                 <li><a href="#how-it-works" className="hover:text-primary transition-colors">How it Works</a></li>
                 <li><a href="#about" className="hover:text-primary transition-colors">About</a></li>

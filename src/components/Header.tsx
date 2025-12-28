@@ -38,15 +38,15 @@ export const Header = ({ user }: HeaderProps) => {
             <Calculator className="w-5 h-5 text-primary" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-lg md:text-xl font-semibold text-foreground">Zakat Calculator</h1>
-            <p className="text-sm text-muted-foreground hidden md:block">Track and fulfill your zakat easily</p>
+            <h1 className="text-lg md:text-xl font-semibold text-foreground">EZ Zakat</h1>
+            <p className="text-sm text-muted-foreground hidden md:block">Fulfill your Zakat with Ease & Confidence</p>
           </div>
         </div>
-        
+
         {/* Right Side - Auth Status */}
         <div className="flex items-center">
           {user ? (
-            <button 
+            <button
               className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors cursor-pointer"
               onClick={handleSignOut}
               title={`Signed in as ${user.email}`}
