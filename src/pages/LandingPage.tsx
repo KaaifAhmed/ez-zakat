@@ -267,7 +267,7 @@ export default function LandingPage() {
               },
               {
                 question: "Is my financial data secure?",
-                answer: "Absolutely. We take privacy seriously. You can use EZ Zakat in \"Guest Mode\" where all data is stored exclusively on your device's local storage—nothing is sent to our servers. If you choose to create an account to sync across devices, your data is stored securely in the cloud using industry-standard encryption. We do not collect any personally identifiable financial information."
+                answer: "Absolutely. We take privacy seriously. You can use EZ Zakat in \"Guest Mode\" where all data is stored exclusively on your device's local storage, nothing is sent to our servers. If you choose to create an account to sync across devices, your data is stored securely in the cloud using industry-standard encryption. We do not collect any personally identifiable financial information."
               },
               {
                 question: "Can I calculate Zakat in different currencies?",
@@ -339,7 +339,7 @@ export default function LandingPage() {
 
           <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <p>&copy; {new Date().getFullYear()} EZ Zakat. All rights reserved.</p>
-            <p>Designed and Developed by Kaaif Ahmed.</p>
+            <p>Designed and Developed by <a href="https://linkedin.com/in/kaaifahmedkhan" target="_blank" className="hover:text-primary transition-colors">Kaaif Ahmed</a></p>
           </div>
         </div>
       </footer>
